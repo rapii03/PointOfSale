@@ -1,0 +1,38 @@
+import DropSatuan from "./DropSatuan";
+
+export interface ProductCardComponentProps {
+    image?: string;
+    name?: string;
+    price?: number;
+    stock?: number;
+    onAddToCart: () => void;
+    // unit?: string;
+}
+
+const CardProduct = ({
+    image = "assets/pos/indomie.png",
+    name = "Indomie Goreng",
+    price = 3500,
+    stock = 99,
+    onAddToCart
+    // unit = "Pcs",
+}: ProductCardComponentProps) => {
+    return (
+        <div onClick={onAddToCart} className="card cursor-pointer hover:bg-slate-50 w-full relative bg-white rounded-[5px] shadow-md overflow-hidden">
+            <div className="satuan absolute top-1 right-1">
+                <DropSatuan />
+            </div>
+            <img className="h-[122px] w-full object-cover" src={image} />
+            <div className="des p-2 flex flex-col gap-1">
+                <div className="name text-[13px] font-semibold">{name}</div>
+                <div className="flex justify-between items-center">
+                    <div className="price font-semibold text-[12px] text-primary">Rp. {price.toLocaleString("id-ID")}</div>
+                    <div className="stock text-[10px] font-medium ">{stock}</div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
+export default CardProduct

@@ -1,0 +1,73 @@
+/* font */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+/* font */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Poppins", sans-serif;
+}
+
+.bgLoginKiri {
+  background-image: url("../../public/assets/login/bgLoginKiri.png");
+  background-size: cover;
+}
+
+.bgLoginKanan {
+  background-image: url("../../public/assets/login/bgLoginKanan.png");
+  background-size: cover;
+}
+.bgAwalLogin {
+  background-image: url("../../public/assets/login/bgAwalLogin.png");
+  background-size: cover;
+}
+
+.focused {
+  background-color: blue;
+}
+
+.headerAdminLayout {
+  display: flex;
+  justify-content: space-between;
+}
+
+.bgIconAdmin {
+  background-image: url("../../public/assets/dashboard/Group1.png");
+  background-size: cover;
+}
+.bgIconAdminHover {
+  background-image: url("../../public/assets/dashboard/Group3.png");
+  background-size: cover;
+}
+
+.bgIconKasir {
+  background-image: url("../../public/assets/dashboard/Group2.png");
+  background-size: cover;
+}
+.bgIconKasirHover {
+  background-image: url("../../public/assets/dashboard/Group4.png");
+  background-size: cover;
+}
+
+
+/* Menyesuaikan warna latar belakang dan lebar scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  margin-left : 10px;
+}
+
+/* Warna track scrollbar */
+::-webkit-scrollbar-track {
+  background: #D9D9D9 ;
+}
+
+/* Warna thumb scrollbar */
+::-webkit-scrollbar-thumb {
+  background: #A8A8A8;
+}
+
+/* Menghilangkan tombol panah scrollbar */
+::-webkit-scrollbar-button {
+  display: none;
+}
