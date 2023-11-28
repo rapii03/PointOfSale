@@ -33,51 +33,18 @@ export default function Kategori() {
   ];
 
   const columns = ["No", "Nama Kategori", "Aksi"];
-  interface kategori {
+
+  interface Kategori {
     id?: number;
     nama: string;
   }
-  const dataKategori: kategori[] = [
-    {
-      id: 1,
-      nama: "Makanan",
-    },
-    {
-      id: 1,
-      nama: "Makanan",
-    },
-    {
-      id: 1,
-      nama: "Makanan",
-    },
-    {
-      id: 1,
-      nama: "Makanan",
-    },
-    {
-      id: 1,
-      nama: "Makanan",
-    },
-    {
-      id: 2,
-      nama: "Cemilan",
-    },
-    {
-      id: 3,
-      nama: "Minuman",
-    },
-    {
-      id: 3,
-      nama: "Minuman",
-    },
-    {
-      id: 3,
-      nama: "Minuman",
-    },
-    {
-      id: 3,
-      nama: "Minuman",
-    },
+  //Format Data Buat Kategori
+  const dataKategori: Kategori[] = [
+    { id: 1, nama: "Makanan" },
+    { id: 2, nama: "Makanan" },
+    { id: 3, nama: "Minuman" },
+    { id: 4, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
   ];
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -97,8 +64,8 @@ export default function Kategori() {
     setOpenDeleteModal(false);
   }
 
-  const { register, handleSubmit } = useForm<kategori>();
-  const onSubmit: SubmitHandler<kategori> = (data) => {
+  const { register, handleSubmit } = useForm<Kategori>();
+  const onSubmit: SubmitHandler<Kategori> = (data) => {
     console.log(data);
     onCloseModal();
   };

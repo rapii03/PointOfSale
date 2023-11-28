@@ -35,12 +35,17 @@ export default function Product() {
 
   const columns = ["No", "Nama Produk", "Kategori", "Aksi"];
 
-  const data = [
-    { nama: "Indomie" },
-    { nama: "Indomie" },
-    { nama: "Indomie" },
-    { nama: "Indomie" },
-    { nama: "Indomie" },
+  interface Produk {
+    id?: number;
+    nama: string;
+    kategori: string[];
+  }
+  //Format Data Buat Produk
+  const dataProduk: Produk[] = [
+    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
   ];
 
   const crumbs = [
@@ -118,7 +123,7 @@ export default function Product() {
             </tr>
           </thead>
           <tbody>
-            {data.map((col, colIndex) => (
+            {dataProduk.map((col, colIndex, id) => (
               <tr>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
@@ -132,11 +137,11 @@ export default function Product() {
                 </td>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-start items-center gap-x-5 h-12 border-b">
-                    <p className="text-white text-md bg-[#FF6B35] w-24 h-6 p-3 rounded-md flex justify-center items-center">
-                      Makanan
+                    <p className="text-white text-md bg-[#FF6B35] h-6 p-2 rounded-md flex justify-center items-center">
+                      {col.kategori[0]}
                     </p>
-                    <p className="text-white text-md bg-[#FF6B35] w-11 h-6 p-3 rounded-md flex justify-center items-center">
-                      Mie
+                    <p className="text-white text-md bg-[#FF6B35] h-6 p-2 rounded-md flex justify-center items-center">
+                      {col.kategori[1]}
                     </p>
                   </div>
                 </td>

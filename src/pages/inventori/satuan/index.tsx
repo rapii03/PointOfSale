@@ -33,23 +33,16 @@ export default function Satuan() {
   ];
 
   const columns = ["No", "Nama Satuan", "Aksi"];
-  interface satuan {
+
+  interface Satuan {
     id?: number;
     nama: string;
   }
-  const dataSatuan: satuan[] = [
-    {
-      id: 1,
-      nama: "Pcs",
-    },
-    {
-        id: 2,
-        nama: "Dus",
-      },
-      {
-        id: 3,
-        nama: "Renteng",
-      },
+  //Format Data Buat Satuan
+  const dataSatuan: Satuan[] = [
+    { id: 1, nama: "Pcs" },
+    { id: 2, nama: "Dus" },
+    { id: 3, nama: "Pax" },
   ];
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -69,8 +62,8 @@ export default function Satuan() {
     setOpenDeleteModal(false);
   }
 
-  const { register, handleSubmit } = useForm<satuan>();
-  const onSubmit: SubmitHandler<satuan> = (data) => {
+  const { register, handleSubmit } = useForm<Satuan>();
+  const onSubmit: SubmitHandler<Satuan> = (data) => {
     console.log(data);
     onCloseModal();
   };
@@ -83,7 +76,7 @@ export default function Satuan() {
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
       <div className="flex h-fit justify-between items-center mb-6">
-        <Searchbar placeholder="Cari Satuan"/>
+        <Searchbar placeholder="Cari Satuan" />
         <button
           className="bg-[#FF6B35] h-fit px-3 py-1 rounded-md text-white text-md flex justify-center items-center gap-2"
           onClick={() => setOpenAddModal(true)}
@@ -117,7 +110,9 @@ export default function Satuan() {
                   className={
                     column === "No"
                       ? "bg-[#ff6b3546] px-0 font-semibold text-sm text-[#FF6B35] py-2 w-[7%]"
-                      : column == "Aksi" ? "bg-[#ff6b3546] px-0 font-semibold text-sm text-[#FF6B35] py-2 text-center" : "bg-[#ff6b3546] px-0 font-semibold text-sm text-[#FF6B35] py-2 text-left"
+                      : column == "Aksi"
+                      ? "bg-[#ff6b3546] px-0 font-semibold text-sm text-[#FF6B35] py-2 text-center"
+                      : "bg-[#ff6b3546] px-0 font-semibold text-sm text-[#FF6B35] py-2 text-left"
                   }
                 >
                   {column}

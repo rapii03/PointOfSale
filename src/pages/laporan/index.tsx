@@ -3,101 +3,51 @@ import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Image from "next/image";
 import laporan from "../../../public/assets/admin/laporanKeuangan.png";
-// import Searchbar from "@/components/Searchbar";
-// import { Pagination } from "flowbite-react";
-// import { useState } from "react";
-// import { useForm, SubmitHandler } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 
 export default function Laporan() {
   const crumbs = [
     { text: "Home", href: "/dashboard-admin" },
     { text: "Transaksi" },
   ];
-
+  const { register, handleSubmit, unregister, reset } = useForm();
+  const onSubmit = (data: any) => {
+    if (data.tanggal <= data.tanggal1) {
+      console.log(data);
+      alert("Data Masuk");
+    } else {
+      console.log("error");
+    }
+  };
   return (
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
       <div className="flex h-fit justify-between items-center mb-6">
         <div className="flex justify-between items-center gap-x-3 text-sm">
-          <div className="w-[9.188rem] h-10 bg-white border border-[#FF6B35] rounded-md flex px-2 items-center justify-between ">
-            <p>01-07-2023</p>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
+          <div className="flex  text-sm">
+            <form
+              onChange={handleSubmit(onSubmit)}
+              className="flex flex-nowrap justify-between items-center gap-x-3 text-sm"
             >
-              <path
-                d="M14.25 3H3.75C2.92157 3 2.25 3.67157 2.25 4.5V15C2.25 15.8284 2.92157 16.5 3.75 16.5H14.25C15.0784 16.5 15.75 15.8284 15.75 15V4.5C15.75 3.67157 15.0784 3 14.25 3Z"
-                stroke="#FF6B35"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M12 1.5V4.5"
-                stroke="#FF6B35"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M6 1.5V4.5"
-                stroke="#FF6B35"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2.25 7.5H15.75"
-                stroke="#FF6B35"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
+              <div>
+                <input
+                  type="date"
+                  {...register("tanggal")}
+                  className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 red-500"
+                />
+              </div>
 
-          <p>to</p>
-          <div className="w-[9.188rem] h-10 bg-white border border-[#FF6B35] rounded-md flex items-center justify-between px-2">
-            <p>01-07-2023</p>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-            >
-              <path
-                d="M14.25 3H3.75C2.92157 3 2.25 3.67157 2.25 4.5V15C2.25 15.8284 2.92157 16.5 3.75 16.5H14.25C15.0784 16.5 15.75 15.8284 15.75 15V4.5C15.75 3.67157 15.0784 3 14.25 3Z"
-                stroke="#FF6B35"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M12 1.5V4.5"
-                stroke="#FF6B35"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M6 1.5V4.5"
-                stroke="#FF6B35"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2.25 7.5H15.75"
-                stroke="#FF6B35"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+              <p>to</p>
+
+              <div>
+                <input
+                  type="date"
+                  {...register("tanggal1")}
+                  className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
+                />
+              </div>
+            </form>
           </div>
         </div>
         <button className="w-auto h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-4 text-sm">
@@ -130,7 +80,7 @@ export default function Laporan() {
       </div>
 
       <div className="mt-6 flex justify-center">
-        <Image src={laporan} alt="laporan" />
+        {/* <Image src={laporan} alt="laporan" /> */}
       </div>
     </AdminLayout>
   );

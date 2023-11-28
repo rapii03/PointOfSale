@@ -32,12 +32,14 @@ export default function KelolaKasir() {
   ];
 
   const columns = ["No", "Nama Akun Kasir", "Kode Kasir", "Aksi"];
+
   interface kelolaKasir {
     id?: number;
     nama: string;
     kode: string;
     gambar?: string;
   }
+  //Format Data Buat Kelola Kasir
   const dataKasir: kelolaKasir[] = [
     {
       id: 1,

@@ -40,6 +40,7 @@ export default function KelolaAdmin() {
     sandi: string;
     gambar?: string;
   }
+  //Format Data Buat Kelola Admin
   const dataAdmin: kelolaAdmin[] = [
     {
       id: 1,
