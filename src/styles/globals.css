@@ -50,21 +50,20 @@ body {
   background-size: cover;
 }
 
-
 /* Menyesuaikan warna latar belakang dan lebar scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
-  margin-left : 10px;
+  margin-left: 10px;
 }
 
 /* Warna track scrollbar */
 ::-webkit-scrollbar-track {
-  background: #D9D9D9 ;
+  background: #d9d9d9;
 }
 
 /* Warna thumb scrollbar */
 ::-webkit-scrollbar-thumb {
-  background: #A8A8A8;
+  background: #a8a8a8;
 }
 
 /* Menghilangkan tombol panah scrollbar */

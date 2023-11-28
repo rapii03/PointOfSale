@@ -3,5 +3,5 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/laporan": "pages/laporan.js",
-  "/transaksi": "pages/transaksi.js"
+  "/transaksi/detail-transaksi": "pages/transaksi/detail-transaksi.js"
 }
