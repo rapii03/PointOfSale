@@ -41,7 +41,7 @@ export default function Transaksi() {
     "Status",
     "Aksi",
   ];
-  
+
   interface kelolaTransaksi {
     id?: number;
     invoice: string;
@@ -105,7 +105,11 @@ export default function Transaksi() {
   const { register, handleSubmit, unregister, reset } = useForm();
   const onSubmit = (data: any) => {
     if (data.tanggal <= data.tanggal1) {
-      console.log(data);
+      const date1 = new Date(data.tanggal);
+      const date2 = new Date(data.tanggal1);
+
+      console.log("start date: " + date1);
+      console.log("end date: " + date2);
       alert("Data Masuk");
     } else {
       console.log("error");

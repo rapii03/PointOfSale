@@ -26,6 +26,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/laporan.js"
+    ],
+    "/transaksi": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/transaksi.js"
     ]
   },
   "ampFirstPages": []

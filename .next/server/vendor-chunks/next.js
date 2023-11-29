@@ -1117,6 +1117,16 @@ eval("module.exports = __webpack_require__(/*! ./dist/pages/_document */ \"./nod
 
 /***/ }),
 
+/***/ "./node_modules/next/head.js":
+/*!***********************************!*\
+  !*** ./node_modules/next/head.js ***!
+  \***********************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+eval("module.exports = __webpack_require__(/*! ./dist/shared/lib/head */ \"./node_modules/next/dist/shared/lib/head.js\")\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9ub2RlX21vZHVsZXMvbmV4dC9oZWFkLmpzIiwibWFwcGluZ3MiOiJBQUFBLGlIQUFrRCIsInNvdXJjZXMiOlsid2VicGFjazovL3BvaW50b2ZzYWxlLy4vbm9kZV9tb2R1bGVzL25leHQvaGVhZC5qcz84ODQ5Il0sInNvdXJjZXNDb250ZW50IjpbIm1vZHVsZS5leHBvcnRzID0gcmVxdWlyZSgnLi9kaXN0L3NoYXJlZC9saWIvaGVhZCcpXG4iXSwibmFtZXMiOltdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///./node_modules/next/head.js\n");
+
+/***/ }),
+
 /***/ "./node_modules/next/image.js":
 /*!************************************!*\
   !*** ./node_modules/next/image.js ***!

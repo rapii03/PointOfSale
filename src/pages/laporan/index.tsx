@@ -3,33 +3,56 @@ import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import moment from "moment";
 
 export default function Laporan() {
   const crumbs = [
     { text: "Home", href: "/dashboard-admin" },
     { text: "Transaksi" },
   ];
-  
+
   const { register, handleSubmit, getValues } = useForm();
+
   const onSubmit = (data: any) => {
     if (data.tanggal <= data.tanggal1) {
-      setTanggal(getValues("tanggal"));
-      setTanggal1(getValues("tanggal1"));
-      console.log(data);
+      const date1 = new Date(data.tanggal);
+      const date2 = new Date(data.tanggal1);
+
+      console.log("start date: " + date1);
+      console.log("end date: " + date2);
+
       alert("Data Masuk");
     } else {
       console.log("error");
     }
   };
 
-  const [tanggal, setTanggal] = useState();
-  const [tanggal1, setTanggal1] = useState();
+  function formattedDate(data1: any, data2: any) {
+    const formattedStartDate = moment(data1).format("D MMMM YYYY");
+    const formattedEndDate = moment(data2).format("D MMMM YYYY");
+
+    return { formattedStartDate, formattedEndDate };
+  }
+
+  const dateA = new Date("18 November 2023");
+  const dateB = new Date("10 December 2023");
+
+  const ubahTanggal = formattedDate(dateA, dateB);
+
+  const startDate = ubahTanggal.formattedStartDate;
+  const endDate = ubahTanggal.formattedEndDate;
+
+  // const dateA = new Date("25 November 2023");
+  // const startDate = moment(dateA).format("D MMMM YYYY");
+
+  // const dateB = new Date("10 December 2023");
+  // const endDate = moment(dateB).format("D MMMM YYYY");
 
   const produk: any = [
     { nama: "Mie", satuan: 123, harga: "Rp.800.000" },
     { nama: "Sabun", satuan: 145, harga: "Rp.30.000" },
     { nama: "Rokok", satuan: 170, harga: "Rp.500.000" },
-    { nama: "Minuman", satuan: 111, harga: "Rp.400.000" },
+    { nama: "Minuman", satuan: 146, harga: "Rp.400.000" },
   ];
 
   const totalPenjualan: any = "3.180.000";
@@ -107,7 +130,7 @@ export default function Laporan() {
           <div className="flex flex-col  items-center gap-[14px] py-4">
             <h1 className="text-2xl font-semibold">Laporan Keuangan</h1>
             <p className="text-sm">
-              Periode {tanggal} - {tanggal1}
+              Periode {startDate} - {endDate}
             </p>
           </div>
           <div className="">
