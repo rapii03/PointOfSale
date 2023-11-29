@@ -1,8 +1,6 @@
 /* eslint-disable react/jsx-key */
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import Image from "next/image";
-import laporan from "../../../public/assets/admin/laporanKeuangan.png";
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
@@ -11,15 +9,41 @@ export default function Laporan() {
     { text: "Home", href: "/dashboard-admin" },
     { text: "Transaksi" },
   ];
-  const { register, handleSubmit, unregister, reset } = useForm();
+  
+  const { register, handleSubmit, getValues } = useForm();
   const onSubmit = (data: any) => {
     if (data.tanggal <= data.tanggal1) {
+      setTanggal(getValues("tanggal"));
+      setTanggal1(getValues("tanggal1"));
       console.log(data);
       alert("Data Masuk");
     } else {
       console.log("error");
     }
   };
+
+  const [tanggal, setTanggal] = useState();
+  const [tanggal1, setTanggal1] = useState();
+
+  const produk: any = [
+    { nama: "Mie", satuan: 123, harga: "Rp.800.000" },
+    { nama: "Sabun", satuan: 145, harga: "Rp.30.000" },
+    { nama: "Rokok", satuan: 170, harga: "Rp.500.000" },
+    { nama: "Minuman", satuan: 111, harga: "Rp.400.000" },
+  ];
+
+  const totalPenjualan: any = "3.180.000";
+  const totalDiscount: any = "0";
+
+  const jumlahTransaksi: number = 145;
+  const jumlahTransaksiSelesai: number = 140;
+  const jumlahTransaksiDibatalkan: number = 145;
+
+  const jumlahInvoice: number = 145;
+  const jumlahPendapatanInvoice: any = "10.350.000";
+  const rataJumlahPendapatanInvoice: any = "230.000";
+  const jumlahProdukTerjual: number = 145;
+
   return (
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
@@ -78,28 +102,29 @@ export default function Laporan() {
           <p className="text-white">Print </p>
         </button>
       </div>
-
       <div className="my-2 flex flex-col h-auto items-center py-[37px] px-[55px]     shadow-sm">
         <div className=" w-full flex flex-col gap-y-[2.313rem]">
           <div className="flex flex-col  items-center gap-[14px] py-4">
             <h1 className="text-2xl font-semibold">Laporan Keuangan</h1>
-            <p className="text-sm">Periode 1 April 2023 - 30 April 2023</p>
+            <p className="text-sm">
+              Periode {tanggal} - {tanggal1}
+            </p>
           </div>
           <div className="">
             <div className="flex flex-col gap-[14px]">
               <div className="border-dashed border-y-2 py-2 border-[#707275] flex flex-col gap-[14px] text-[#707275]">
                 <div className="flex justify-between text-base ">
                   <p>Total Penjualan</p>
-                  <p>Rp.3.180.000</p>
+                  <p>Rp.{totalPenjualan}</p>
                 </div>
                 <div className="flex justify-between">
                   <p>Total Discount</p>
-                  <p>Rp.0</p>
+                  <p>Rp.{totalDiscount}</p>
                 </div>
               </div>
               <div className="flex justify-between text-lg font-semibold">
                 <h2>Total </h2>
-                <p>Rp.3.180.000</p>
+                <p>Rp.{totalPenjualan}</p>
               </div>
             </div>
           </div>
@@ -111,15 +136,15 @@ export default function Laporan() {
               </h3>
               <div className="flex justify-between text-base ">
                 <p>Jumlah Transaksi</p>
-                <p>145</p>
+                <p>{jumlahTransaksi}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Transaksi Selesai</p>
-                <p>140</p>
+                <p>{jumlahTransaksiSelesai}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Transaksi Dibatalkan </p>
-                <p>5</p>
+                <p>{jumlahTransaksiDibatalkan}</p>
               </div>
             </div>
           </div>
@@ -132,19 +157,19 @@ export default function Laporan() {
 
               <div className="flex justify-between">
                 <p>Jumlah Invoice</p>
-                <p>145</p>
+                <p>{jumlahInvoice}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Pendapatan Invoice</p>
-                <p>Rp.10.350.000</p>
+                <p>Rp.{jumlahPendapatanInvoice}</p>
               </div>
               <div className="flex justify-between">
                 <p>Rata - Rata Jumlah Pendapatan Invoice </p>
-                <p>Rp.230.000/Invoice</p>
+                <p>Rp.{rataJumlahPendapatanInvoice}/Invoice</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Produk terjual </p>
-                <p>980 Produk</p>
+                <p>{jumlahProdukTerjual} Produk</p>
               </div>
             </div>
           </div>
@@ -154,37 +179,28 @@ export default function Laporan() {
               <h3 className="border-b-2 border-[#E2E8F0] py-2 text-base font-semibold">
                 Penjualan Produk Berdasarkan Kategori
               </h3>
-              <div className="flex justify-between text-[#707275]">
+              <div className="flex  justify-between text-[#707275]">
                 <div>
-                  <p>Sabun</p>
-                  <p>Mie Instan</p>
-                  <p>Rokok</p>
-                  <p>Minuman</p>
+                  {produk.map((produk: any) => (
+                    <p>{produk.nama}</p>
+                  ))}
                 </div>
 
                 <div className="flex flex-col">
-                  <div className="flex justify-between gap-x-56">
-                    <p>145 </p>
-                    <p>Rp.800.000</p>
-                  </div>
-                  <div className="flex justify-between gap-x-56">
-                    <p>123 </p>
-                    <p>Rp.480.000</p>
-                  </div>
-                  <div className="flex justify-between gap-x-56">
-                    <p>145 </p>
-                    <p>Rp.765.000</p>
-                  </div>
-                  <div className="flex justify-between gap-x-56">
-                    <p>221 </p>
-                    <p>Rp.287.000</p>
+                  <div>
+                    {produk.map((produk: any) => (
+                      <div className="flex justify-between gap-x-56">
+                        <p>{produk.satuan} </p>
+                        <p>{produk.harga}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-between  border-dashed border-t-2 py-2 border-[#707275] text-lg font-semibold">
                 <p>Total </p>
-                <p>Rp.3.180.000</p>
+                <p>Rp.{totalPenjualan}</p>
               </div>
             </div>
           </div>
