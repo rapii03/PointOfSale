@@ -1,10 +1,13 @@
 /* eslint-disable react/jsx-key */
+"use client";
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Searchbar from "@/components/Searchbar";
 import React, { useState } from "react";
+import DetailProduk from "./[detail-produk]";
 import { Pagination } from "flowbite-react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 interface IDataForm {
   nama: string;
@@ -43,9 +46,9 @@ export default function Product() {
   //Format Data Buat Produk
   const dataProduk: Produk[] = [
     { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
-    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
-    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
-    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 2, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 3, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 4, nama: "Indomie", kategori: ["Makanan", "Mie"] },
   ];
 
   const crumbs = [
@@ -73,6 +76,7 @@ export default function Product() {
       },
     },
   };
+
   return (
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
@@ -147,7 +151,18 @@ export default function Product() {
                 </td>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center gap-x-5 h-12 border-b">
-                    <button className="text-md text-blue-700">Detail</button>
+                    <Link
+                      href={`/inventori/produk/detail-produk${col.id}`}
+                      className="text-md text-blue-700"
+                    >
+                      Detail
+                    </Link>
+                    {/* <Link
+                      href="/inventori/produk/detail-produk"
+                      className="text-md text-blue-700"
+                    >
+                      Detail
+                    </Link> */}
                   </div>
                 </td>
               </tr>

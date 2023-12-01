@@ -45,6 +45,14 @@ export default function Kategori() {
     { id: 3, nama: "Minuman" },
     { id: 4, nama: "Minuman" },
     { id: 5, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
+    { id: 5, nama: "Minuman" },
   ];
 
   const [currentPage, setCurrentPage] = useState(1);

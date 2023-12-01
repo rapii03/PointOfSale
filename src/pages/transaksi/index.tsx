@@ -238,7 +238,7 @@ export default function Transaksi() {
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                       <button className="text-[#FF6B35] text-md">Print</button>
                       <Link
-                        href="/transaksi/detail-transaksi"
+                        href={`/transaksi/detail-transaksi${col.id}`}
                         className="text-blue-700 text-md"
                       >
                         Detail
@@ -250,7 +250,7 @@ export default function Transaksi() {
                   <td className="border-collapse p2 px-0 text-center">
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                       <Link
-                        href="/transaksi/pending-detail-transaksi"
+                        href={`/transaksi/pending-detail-transaksi${col.id}`}
                         className="text-blue-700 text-md"
                       >
                         Detail

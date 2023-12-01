@@ -43,6 +43,7 @@ export default function Satuan() {
     { id: 1, nama: "Pcs" },
     { id: 2, nama: "Dus" },
     { id: 3, nama: "Pax" },
+    { id: 3, nama: "Pax" },
   ];
 
   const [currentPage, setCurrentPage] = useState(1);

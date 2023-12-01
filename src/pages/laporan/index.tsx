@@ -8,7 +8,7 @@ import moment from "moment";
 export default function Laporan() {
   const crumbs = [
     { text: "Home", href: "/dashboard-admin" },
-    { text: "Transaksi" },
+    { text: "Laporan" },
   ];
 
   const { register, handleSubmit, getValues } = useForm();
