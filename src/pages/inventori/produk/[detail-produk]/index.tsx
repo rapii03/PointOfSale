@@ -137,6 +137,10 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
     setUploading(false);
   };
 
+  const saveData = () => {
+    alert("Data Tersimpan");
+  };
+
   return (
     <AdminLayout>
       <div className="flex justify-between items-center">
@@ -196,10 +200,12 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
               />
             </div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-white">
-              Gambar Produk
-            </label>
-            <ImageUploader dirs={dirs} />
+            <div className="w-1/2 relative">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                Gambar Produk
+              </label>
+              <ImageUploader dirs={dirs} />
+            </div>
           </div>
           <button
             className="bg-[#FF6B35] h-fit w-fit px-3 py-2 rounded-md text-white text-md flex justify-center items-center "
@@ -275,7 +281,7 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
             <button
               type="submit"
               className="bg-[#FF6B35] h-fit w-fit px-4 py-2 rounded-md text-white text-md flex justify-center items-center"
-              onClick={() => handleOpenUpdateModal(0)}
+              onClick={() => saveData()}
             >
               Simpan
             </button>

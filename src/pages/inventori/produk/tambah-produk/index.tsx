@@ -49,6 +49,16 @@ const FormTambahProdukAdminPage: NextPage<Props> = ({ dirs }) => {
     setOpenModal(false);
   }
 
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  function onCloseDeleteModal() {
+    setOpenDeleteModal(false);
+  }
+
+  const handleDelete = () => {
+    console.log("Delete");
+    onCloseDeleteModal();
+  };
+
   const columns = ["No", "Satuan", "Jumlah Stok", "Harga Barang", "Aksi"];
   const [targetUpdate, setTargetUpdate] = useState(0);
 
@@ -229,7 +239,10 @@ const FormTambahProdukAdminPage: NextPage<Props> = ({ dirs }) => {
                             >
                               Atur Stok
                             </button>
-                            <button className="text-[#FB1919] text-md">
+                            <button
+                              className="text-[#FB1919] text-md"
+                              onClick={() => setOpenDeleteModal(true)}
+                            >
                               Hapus
                             </button>
                           </div>
@@ -354,6 +367,48 @@ const FormTambahProdukAdminPage: NextPage<Props> = ({ dirs }) => {
                       Simpan
                     </button>
                   </form>
+                </div>
+              </Modal.Body>
+            </Modal>
+
+            <Modal
+              dismissible
+              show={openDeleteModal}
+              size="md"
+              onClose={onCloseDeleteModal}
+              popup
+            >
+              <Modal.Body className="p-4 border-2 rounded-lg border-[#FF6B35]">
+                <div className="space-y-6 flex flex-col justify-center items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="150"
+                    height="150"
+                    viewBox="0 0 150 150"
+                    fill="none"
+                  >
+                    <path
+                      d="M81.25 106.25H68.75V93.75H81.25V106.25ZM81.25 81.25H68.75L68.75 43.75L81.25 43.75L81.25 81.25ZM75 137.5C109.5 137.5 137.5 109.5 137.5 75C137.5 40.5 109.5 12.5 75 12.5C40.5 12.5 12.5 40.5 12.5 75C12.5 109.5 40.5 137.5 75 137.5ZM75 25C102.562 25 125 47.4375 125 75C125 102.562 102.562 125 75 125C47.4375 125 25 102.562 25 75C25 47.4375 47.4375 25 75 25Z"
+                      fill="#FB1919"
+                    />
+                  </svg>
+                  <p className="rounded-lg font-semibold">
+                    Anda yakin mau menghapus item ini ?
+                  </p>
+                  <div className="flex gap-6">
+                    <button
+                      className="bg-[#E2E8F0] w-fit text-black px-4 p-2 self-end rounded-md"
+                      onClick={onCloseDeleteModal}
+                    >
+                      Kembali
+                    </button>
+                    <button
+                      className="bg-[#FF6B35] w-fit text-white px-4 p-2 self-end rounded-md"
+                      onClick={handleDelete}
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </div>
               </Modal.Body>
             </Modal>
