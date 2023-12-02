@@ -1,12 +1,27 @@
 /* eslint-disable react/jsx-key */
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import loading from "@/components/loading";
 import Searchbar from "@/components/Searchbar";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { Modal, Pagination } from "flowbite-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
 export default function KelolaAdmin() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
+  const [nickname, setNickname] = useLocalStorage("nickname", "");
+
+  useEffect(() => {
+    if (nickname === "OPM") {
+      setIsAdmin(true);
+    } else {
+      router.push("/dashboard-admin");
+    }
+  })
+
   const paginationTheme = {
     pages: {
       base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px border border-[#FF6B35] rounded-md",
@@ -88,6 +103,10 @@ export default function KelolaAdmin() {
     console.log("Delete");
     onCloseDeleteModal();
   };
+
+  if (!isAdmin) {
+    return loading();
+  }
 
   return (
     <AdminLayout>

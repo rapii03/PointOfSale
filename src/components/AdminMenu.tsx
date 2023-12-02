@@ -2,10 +2,23 @@ import { useRouter } from "next/router";
 import * as React from "react";
 import { useState } from "react";
 import Link from "next/link";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 function AdminMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+
+  const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
+  const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
+  const [nickname, setNickname] = useLocalStorage("nickname", "");
+
+  function logOutAction () {
+    setRefreshToken("");
+    setAccessToken("");
+    setNickname("");
+    router.push("/login");
+  }
+
   return (
     <div className="flex flex-col justify-center items-center mt-12 gap-y-4">
       <Link
@@ -223,7 +236,8 @@ function AdminMenu() {
         </svg>
         <p>Kelola Kasir</p>
       </Link>
-      <Link
+      {nickname && nickname === "OPM" ? (
+        <Link
         href="/kelola-admin"
         className={
           router.pathname == "/kelola-admin"
@@ -242,28 +256,29 @@ function AdminMenu() {
           height="20"
           viewBox="0 0 17 20"
           fill="none"
-        >
+          >
           <path
             d="M1 18.5V17.4375C1 13.3299 4.32989 10 8.4375 10C12.5451 10 15.875 13.3299 15.875 17.4375V18.5"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-          />
+            />
           <path
             d="M8.4375 10C10.7847 10 12.6875 8.09717 12.6875 5.75C12.6875 3.40279 10.7847 1.5 8.4375 1.5C6.09029 1.5 4.1875 3.40279 4.1875 5.75C4.1875 8.09717 6.09029 10 8.4375 10Z"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-          />
+            />
         </svg>
         <p>Kelola Admin</p>
       </Link>
-      <Link
-        href="/"
-        className={
+      ) : null}
+      <button
+      onClick={logOutAction}
+      className={
           router.pathname == "/"
-            ? "bg-white rounded-md border-white w-40 h-11 px-2 flex justify-start items-center gap-x-2 text-[#FF6B35]"
-            : "bg-[#FF6B35] rounded-md border-white border-2 w-40 h-11 px-2 flex justify-start items-center gap-x-2 text-white"
+            ? "bg-white rounded-md border-black w-40 h-11 px-2 flex justify-start items-center gap-x-2 text-[#FF6B35]"
+            : "bg-[#FF6B35] rounded-md border-white border-2 w-40 h-11 px-2 flex justify-start items-center text-white gap-x-2"
         }
       >
         <svg
@@ -284,7 +299,7 @@ function AdminMenu() {
           />
         </svg>
         <p>Keluar</p>
-      </Link>
+      </button>
     </div>
   );
 }

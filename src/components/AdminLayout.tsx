@@ -1,13 +1,34 @@
 // import * as React from "react";
-import React, { ReactNode } from "react";
+import checkAuth from "@/hooks/checkAuth";
+import redirectLogin from "@/hooks/redirectLogin";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { useRouter } from "next/navigation";
+import React, { ReactNode, useEffect, useState } from "react";
 import AdminMenu from "./AdminMenu";
 import HeaderAdmin from "./HeaderAdmin";
+import loading from "./loading";
 
 type Props = {
   children?: ReactNode;
 };
 
-const AdminLayout = ({ children }: Props) => (
+const AdminLayout = ({ children }: Props) => {
+  const router = useRouter();
+  const [check, setCheck] = useState(false);
+  const [nickname, setNickname] = useLocalStorage("nickname", "");
+  const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
+  
+  useEffect(() => {
+    const result: boolean = checkAuth(refreshToken);
+    redirectLogin(!result || (nickname !== "OPM" && nickname !== "AANG"), router);
+    setCheck(result);
+  })
+
+  if (!check) {
+    return loading();
+  }
+  
+  return (
   <div className="flex bg-[#FF6B35] w-full min-h-screen p-3 gap-x-8 justify-center">
     <div>
       <p className="text-white font-bold text-3xl text-center">Yang's grosir</p>
@@ -21,5 +42,6 @@ const AdminLayout = ({ children }: Props) => (
     </div>
   </div>
 );
+  }
 
 export default AdminLayout;

@@ -25,6 +25,7 @@ export default function Home() {
 
   const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
   const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
+  const [nickname, setNickname] = useLocalStorage("nickname", "");
 
   const {
     register,
@@ -55,6 +56,7 @@ export default function Home() {
       console.log(response.data);
       setRefreshToken(response.data.data.refresh_token);
       setAccessToken(response.data.data.access_token);
+      setNickname(response.data.data.nickname);
       router.push("/dashboard-admin");
     } catch (error: any) {
       if(error.response.status === 400) {
