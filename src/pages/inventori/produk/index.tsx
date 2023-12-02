@@ -1,10 +1,8 @@
 /* eslint-disable react/jsx-key */
-"use client";
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Searchbar from "@/components/Searchbar";
 import React, { useState } from "react";
-import DetailProduk from "./[detail-produk]";
 import { Pagination } from "flowbite-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -152,7 +150,7 @@ export default function Product() {
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                     <Link
-                      href={`/inventori/produk/detail-produk${col.id}`}
+                      href={`/inventori/produk/detail-produk-${col.id}`}
                       className="text-md text-blue-700"
                     >
                       Detail

@@ -28,7 +28,7 @@ interface IModalData {
   harga?: number;
 }
 
-const FormTambahProdukAdminPage: NextPage<Props> = ({ dirs }) => {
+const Tes: NextPage<Props> = ({ dirs }) => {
   const crumbs = [
     { text: "Home", href: "/dashboard-admin" },
     { text: "Inventori", href: "/inventori/produk" },
@@ -375,4 +375,4 @@ export const getServerSideProps: GetServerSideProps = async () => {
   }
 };
 
-export default FormTambahProdukAdminPage;
+export default Tes;

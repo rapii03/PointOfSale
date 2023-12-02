@@ -1,15 +1,23 @@
 /* eslint-disable react/jsx-key */
 import { useEffect, useState } from "react";
-import { Label, Modal, TextInput, Select, Breadcrumb } from "flowbite-react";
+import { Label, Modal, TextInput, Select } from "flowbite-react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { useRouter } from "next/router";
+import { GetServerSideProps, NextPage } from "next";
+import axios from "axios";
+import fs from "fs/promises";
+import path from "path";
+import ImageUploader from "@/components/handleUpload";
+
+interface Props {
+  dirs: string[];
+}
 
 interface IDataForm {
   nama?: string;
   kategori?: string;
-  tanggal?: string;
+  tanggal?: boolean;
   gambar?: string;
   modal: IModalData[];
 }
@@ -20,13 +28,13 @@ interface IModalData {
   harga?: number;
 }
 
-export default function DetailProduk() {
+const DetailProduk: NextPage<Props> = ({ dirs }) => {
   const [openModal, setOpenModal] = useState(false);
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
   const [dataForm, setDataForm] = useState<IDataForm>({
     nama: "",
     kategori: "",
-    tanggal: "",
+    tanggal: true,
     gambar: "",
     modal: [],
   });
@@ -111,12 +119,36 @@ export default function DetailProduk() {
     console.log(dataForm, "useEffect");
   }, [dataForm]);
 
-  // const router = useRouter();
-  // const { slug } = router.query;
+  const [uploading, setUploading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File>();
+
+  const handleUpload = async () => {
+    setUploading(true);
+    try {
+      if (!selectedFile) return;
+      const formData = new FormData();
+      formData.append("myImage", selectedFile);
+      const { data } = await axios.post("/api/image", formData);
+      console.log(data);
+    } catch (error: any) {
+      console.log(error.response?.data);
+    }
+    setUploading(false);
+  };
 
   return (
     <AdminLayout>
-      <Breadcrumbs crumbs={crumbs} />
+      <div className="flex justify-between items-center">
+        <Breadcrumbs crumbs={crumbs} />
+        <button
+          type="button"
+          onClick={() => setOpenDeleteModal(true)}
+          className="bg-[#FB1919] text-white px-[15px] py-[8px]  gap-[8px] max-h-[36px]  rounded flex items-center justify-center"
+        >
+          Hapus Produk
+        </button>
+      </div>
       <div className="border border-[#FF6B35] bg-white w-100 h-100 rounded-lg p-5 flex flex-col gap-y-5">
         <form
           className="flex flex-col gap-y-5"
@@ -157,29 +189,17 @@ export default function DetailProduk() {
               </label>
               <input
                 type="date"
-                {...register("tanggal")}
+                {...register("tanggal", {
+                  value: true,
+                  valueAsDate: true,
+                })}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
               />
             </div>
-            <div className="w-1/2 ">
-              <label className="block text-sm font-medium text-gray-900 dark:text-white">
-                Gambar Produk
-              </label>
-              <div className="">
-                <div className="p-2 ps-0 flex items-center gap-3">
-                  <label
-                    htmlFor="file-upload"
-                    className="bg-[#FF6B35] text-white rounded-md p-2 px-4 text-md "
-                  >
-                    <input id="file-upload" type="file" className="hidden" />
-                    Unggah
-                  </label>
-                  <p className="text-md text-[#B7B7B7]">
-                    {dataForm.gambar === "" ? "Unggah Gambar" : dataForm.gambar}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <label className="block text-sm font-medium text-gray-900 dark:text-white">
+              Gambar Produk
+            </label>
+            <ImageUploader dirs={dirs} />
           </div>
           <button
             className="bg-[#FF6B35] h-fit w-fit px-3 py-2 rounded-md text-white text-md flex justify-center items-center "
@@ -414,4 +434,17 @@ export default function DetailProduk() {
       </div>
     </AdminLayout>
   );
-}
+};
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const props = { dirs: [] };
+  try {
+    const dirs = await fs.readdir(path.join(process.cwd(), "/public/images"));
+    props.dirs = dirs as any;
+    return { props };
+  } catch (error) {
+    return { props };
+  }
+};
+
+export default DetailProduk;

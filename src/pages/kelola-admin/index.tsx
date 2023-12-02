@@ -5,8 +5,24 @@ import Searchbar from "@/components/Searchbar";
 import { Modal, Pagination } from "flowbite-react";
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { GetServerSideProps, NextPage } from "next";
+import axios from "axios";
+import fs from "fs/promises";
+import path from "path";
+import ImageUploader from "@/components/handleUpload";
 
-export default function KelolaAdmin() {
+interface Props {
+  dirs: string[];
+}
+
+interface kelolaAdmin {
+  id?: number;
+  nama: string;
+  email: string;
+  sandi: string;
+}
+
+const KelolaAdmin: NextPage<Props> = ({ dirs }) => {
   const paginationTheme = {
     pages: {
       base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px border border-[#FF6B35] rounded-md",
@@ -33,13 +49,6 @@ export default function KelolaAdmin() {
 
   const columns = ["No", "Nama Akun Admin", "Email", "Aksi"];
 
-  interface kelolaAdmin {
-    id?: number;
-    nama: string;
-    email: string;
-    sandi: string;
-    gambar?: string;
-  }
   //Format Data Buat Kelola Admin
   const dataAdmin: kelolaAdmin[] = [
     {
@@ -50,13 +59,13 @@ export default function KelolaAdmin() {
     },
     {
       id: 2,
-      nama: "Ndaru",
+      nama: "Amel Sinta",
       email: "amel123@gmail.com",
       sandi: "123456",
     },
     {
       id: 3,
-      nama: "Dinda",
+      nama: "Amel Sinta",
       email: "amel123@gmail.com",
       sandi: "123456",
     },
@@ -238,25 +247,7 @@ export default function KelolaAdmin() {
                   <label className="block text-sm font-medium text-gray-900 dark:text-white">
                     Foto Admin
                   </label>
-                  <div className="">
-                    <div className="p-2 ps-0 flex items-center gap-3">
-                      <label
-                        htmlFor="file-upload"
-                        className="bg-[#FF6B35] text-white rounded-md p-2 px-4 text-md "
-                      >
-                        <input
-                          id="file-upload"
-                          type="file"
-                          className="hidden"
-                        />
-                        Unggah
-                      </label>
-                      <p className="text-md text-[#B7B7B7]">
-                        Unggah Gambar
-                        {/* {dataForm.gambar === "" ? "Unggah Gambar" : dataForm.gambar} */}
-                      </p>
-                    </div>
-                  </div>
+                  <ImageUploader dirs={dirs} />
                 </div>
               </div>
               <div className="flex justify-end">
@@ -308,7 +299,8 @@ export default function KelolaAdmin() {
                     {...register("sandi", { required: true })}
                   ></input>
                 </div>
-                <div className="w-1/2">
+
+                <div className="w-1/2 ">
                   <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Email
                   </label>
@@ -321,7 +313,7 @@ export default function KelolaAdmin() {
                   <label className="block text-sm font-medium text-gray-900 dark:text-white">
                     Foto Admin
                   </label>
-                  <div className="">
+                  {/* <div className="">
                     <div className="p-2 ps-0 flex items-center gap-3">
                       <label
                         htmlFor="file-upload"
@@ -336,10 +328,11 @@ export default function KelolaAdmin() {
                       </label>
                       <p className="text-md text-[#B7B7B7]">
                         Unggah Gambar
-                        {/* {dataForm.gambar === "" ? "Unggah Gambar" : dataForm.gambar} */}
+
                       </p>
                     </div>
-                  </div>
+                  </div> */}
+                  <ImageUploader dirs={dirs} />
                 </div>
               </div>
               <div className="flex justify-end">
@@ -399,4 +392,17 @@ export default function KelolaAdmin() {
       </Modal>
     </AdminLayout>
   );
-}
+};
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const props = { dirs: [] };
+  try {
+    const dirs = await fs.readdir(path.join(process.cwd(), "/public/images"));
+    props.dirs = dirs as any;
+    return { props };
+  } catch (error) {
+    return { props };
+  }
+};
+
+export default KelolaAdmin;
