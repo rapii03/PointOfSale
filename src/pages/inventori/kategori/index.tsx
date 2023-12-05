@@ -277,10 +277,15 @@ export default function Kategori() {
                   Nama Kategori
                 </label>
                 <input
+                  defaultValue={initName}
+                  value={initName}
                   type="text"
+                  onFocus={(e) => (e.target.value = initName)}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                   placeholder="Nama Produk"
-                  {...registerEdit("name", { required: true })}
+                  {...registerEdit("name", { required: true, onChange(event) {
+                    setInitName(event.target.value);
+                  }, })}
                 ></input>
               </div>
               <button

@@ -2,11 +2,57 @@
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Searchbar from "@/components/Searchbar";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import { Modal, Pagination } from "flowbite-react";
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { SWRResponse, mutate } from "swr";
+import useSWR from "swr"
+import { AxiosRequestConfig } from "axios";
 
 export default function KelolaKasir() {
+  interface Data {
+    id?: string;
+    username: string;
+    code: string;
+    image?: string;
+  }
+
+  interface Kasir {
+    items : Data[]
+    meta : any
+  }
+
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [namaKasir, setNamaKasir] = useState("");
+  const [updateId, setUpdateId] = useState("");
+  const [initName, setInitName] = useState("");
+
+  const {
+    data: dataKasir,
+    error,
+    isLoading,
+  }: SWRResponse<Kasir, any, boolean> = useSWR(
+    `/cashier/all?page=${currentPage}&search=${search}`,
+    (url) =>
+      axiosPrivate
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => res.data?.data)
+  );
+
+  const handleSearch = (e: any) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
+
   const paginationTheme = {
     pages: {
       base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px border border-[#FF6B35] rounded-md",
@@ -33,41 +79,18 @@ export default function KelolaKasir() {
 
   const columns = ["No", "Nama Akun Kasir", "Kode Kasir", "Aksi"];
 
-  interface kelolaKasir {
-    id?: number;
-    nama: string;
-    kode: string;
-    gambar?: string;
-  }
-  //Format Data Buat Kelola Kasir
-  const dataKasir: kelolaKasir[] = [
-    {
-      id: 1,
-      nama: "Amel Sinta",
-      kode: "YNG123",
-    },
-    {
-      id: 2,
-      nama: "Ndaru",
-      kode: "YNG333",
-    },
-    {
-      id: 3,
-      nama: "Dinda",
-      kode: "YNG124",
-    },
-  ];
-
-  const [currentPage, setCurrentPage] = useState(1);
   const onPageChange = (page: number) => setCurrentPage(page);
 
   const [openModal, setOpenModal] = useState(false);
   function onCloseModal() {
     setOpenModal(false);
+    setInitName("");
+    setUpdateId("");
   }
   const [openAddModal, setOpenAddModal] = useState(false);
   function onCloseAddModal() {
     setOpenAddModal(false);
+    setNamaKasir("");
   }
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -75,13 +98,60 @@ export default function KelolaKasir() {
     setOpenDeleteModal(false);
   }
 
-  const { register, handleSubmit } = useForm<kelolaKasir>();
-  const onSubmit: SubmitHandler<kelolaKasir> = (data) => {
-    console.log(data);
+  const { register, handleSubmit } = useForm<Data>();
+  const { register: registerEdit, handleSubmit: handleSubmitEdit } = useForm<Data>();
+
+  const onSubmit: SubmitHandler<Data> = async (data) => {
+    try {
+      data.image = "img";
+      await axiosPrivate.post("/cashier/add", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/cashier/all?page=${currentPage}&search=${search}`);
+    onCloseAddModal();
+  };
+
+  const onSubmitEdit: SubmitHandler<Data> = async (data) => {
+    data.id = updateId;
+    data.image = "alamatimg";
+    try {
+      await axiosPrivate.put("/cashier/update", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/cashier/all?page=${currentPage}&search=${search}`);
     onCloseModal();
   };
-  const handleDelete = () => {
-    console.log("Delete");
+
+  const handleDelete = async () => {
+    const data: AxiosRequestConfig<any> = {
+      data: { id: updateId },
+    };
+    try {
+      await axiosPrivate.delete("/cashier/delete", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/cashier/all?page=${currentPage}&search=${search}`);
     onCloseDeleteModal();
   };
 
@@ -89,7 +159,7 @@ export default function KelolaKasir() {
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
       <div className="flex h-fit justify-between items-center mb-6">
-        <Searchbar placeholder="Cari Akun Kasir" />
+        <Searchbar placeholder="Cari Akun Kasir" onChange={handleSearch}/>
         <button
           className="bg-[#FF6B35] h-fit px-3 py-1 rounded-md text-white text-md flex justify-center items-center gap-2"
           onClick={() => setOpenAddModal(true)}
@@ -134,7 +204,7 @@ export default function KelolaKasir() {
             </tr>
           </thead>
           <tbody>
-            {dataKasir.map((col, colIndex) => (
+            {dataKasir?.items?.map((col, colIndex) => (
               <tr>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
@@ -143,25 +213,32 @@ export default function KelolaKasir() {
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.nama}
+                    {col.username}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.kode}
+                    {col.code}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                     <button
                       className="text-[#FF6B35] text-md"
-                      onClick={() => setOpenModal(true)}
+                      onClick={(e) => {
+                        setInitName(col.username);
+                        setUpdateId(col.id as string);
+                        setOpenModal(true);
+                      }}
                     >
                       Edit
                     </button>
                     <button
                       className="text-[#FB1919] text-md"
-                      onClick={() => setOpenDeleteModal(true)}
+                      onClick={() => {
+                        setUpdateId(col.id as string);
+                        setOpenDeleteModal(true);
+                      }}
                     >
                       Hapus
                     </button>
@@ -173,16 +250,18 @@ export default function KelolaKasir() {
         </table>
       </div>
       <div className="flex overflow-x-auto sm:justify-end">
-        <Pagination
-          theme={paginationTheme}
-          layout="pagination"
-          currentPage={currentPage}
-          totalPages={10}
-          onPageChange={onPageChange}
-          previousLabel=""
-          nextLabel=""
-          showIcons
-        />
+      {dataKasir?.meta?.totalPages > 1 && (
+          <Pagination
+            theme={paginationTheme}
+            layout="pagination"
+            currentPage={currentPage}
+            totalPages={dataKasir?.meta?.totalPages}
+            onPageChange={onPageChange}
+            previousLabel=""
+            nextLabel=""
+            showIcons
+          />
+        )}
       </div>
 
       {/* Edit Modal */}
@@ -197,7 +276,7 @@ export default function KelolaKasir() {
           <div className="space-y-6">
             <form
               className="flex flex-col gap-y-3 "
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmitEdit(onSubmitEdit)}
             >
               <p className="w-2/3 rounded-lg font-semibold">Edit Kasir</p>
               <div className="flex w-full gap-5">
@@ -206,10 +285,14 @@ export default function KelolaKasir() {
                     Nama Kasir
                   </label>
                   <input
+                    defaultValue={initName}
+                    onFocus={(e) => (e.target.value = initName)}
                     type="text"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     placeholder="Nama Kasir"
-                    {...register("nama", { required: true })}
+                    {...registerEdit("username", { required: true, onChange(event) {
+                      setInitName(event.target.value);
+                    }, })}
                   ></input>
                 </div>
                 <div className="w-1/2 ">
@@ -272,9 +355,13 @@ export default function KelolaKasir() {
                   </label>
                   <input
                     type="text"
+                    value={namaKasir}
+                    onFocus={(e) => (e.target.value = namaKasir)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     placeholder="Nama Kasir"
-                    {...register("nama", { required: true })}
+                    {...register("username", { required: true, onChange(event) {
+                      setNamaKasir(event.target.value);
+                    }, })}
                   ></input>
                 </div>
                 <div className="w-1/2 ">
