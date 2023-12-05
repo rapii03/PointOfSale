@@ -1,10 +1,16 @@
 import Image from "next/image";
 import foto from "../../public/assets/admin/fotoKasir.png";
 
-const HeaderAdmin = () => (
+interface profileI {
+  username: string;
+  nickname: string;
+  imageProfile: string;
+}
+
+const HeaderAdmin = ({profile}: { profile: profileI}) => (
   <div className=" headerAdminLayout  border-b-4 border-grey  ">
     <div className="">
-      <p className="text-[#FF6B35] font-bold text-2xl">Hello Amel</p>
+      <p className="text-[#FF6B35] font-bold text-2xl">Hello {profile.username}</p>
       <p className="text-sm">Semoga Harimu Menyenangkan</p>
     </div>
     <div className="flex py-2 gap-x-6">
@@ -32,8 +38,8 @@ const HeaderAdmin = () => (
         />
       </svg>
       <div className="">
-        <p className="font-semibold ">Amel Sinta</p>
-        <p className="text-sm">Admin</p>
+        <p className="font-semibold ">{ profile.username }</p>
+        <p className="text-sm">{profile.nickname === "OPM" ? "Super Admin" : "Admin"}</p>
       </div>
       <Image
         src={foto}

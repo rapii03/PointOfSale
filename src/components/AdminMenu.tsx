@@ -10,12 +10,16 @@ function AdminMenu() {
 
   const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
   const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
+  const [imageProfile, setImageProfile] = useLocalStorage("image", "");
   const [nickname, setNickname] = useLocalStorage("nickname", "");
+  const [username, setUsername] = useLocalStorage("username", "");
 
   function logOutAction () {
     setRefreshToken("");
+    setImageProfile("");
     setAccessToken("");
     setNickname("");
+    setUsername("");
     router.push("/login");
   }
 

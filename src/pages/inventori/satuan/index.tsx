@@ -16,6 +16,7 @@ export default function Satuan() {
     id?: string;
     name: string;
   }
+
   interface Satuan {
     items: Data[];
     meta: any;
@@ -92,6 +93,7 @@ export default function Satuan() {
   }
   const [openAddModal, setOpenAddModal] = useState(false);
   function onCloseAddModal() {
+    setSatuan("");
     setOpenAddModal(false);
   }
 
@@ -105,26 +107,56 @@ export default function Satuan() {
 
   const { register, handleSubmit } = useForm<Data>();
 
-  const { register: registerEdit, handleSubmit: handleSubmitEdit } =
-    useForm<Data>();
+  const { register: registerEdit, handleSubmit: handleSubmitEdit } = useForm<Data>();
 
   const onSubmit: SubmitHandler<Data> = async (data) => {
-    await axiosPrivate.post("/product/unit/add", data);
+    try {
+      await axiosPrivate.post("/product/unit/add", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
     mutate(`/product/unit/all?page=${currentPage}&search=${search}`);
     onCloseAddModal();
   };
 
   const onSubmitEdit: SubmitHandler<Data> = async (data) => {
     data.id = updateId;
-    await axiosPrivate.put("/product/unit/update", data);
+    try {
+      await axiosPrivate.put("/product/unit/update", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
     mutate(`/product/unit/all?page=${currentPage}&search=${search}`);
     onCloseModal();
   };
+
   const handleDelete = async () => {
-    const data : AxiosRequestConfig<any> = {
+    const data: AxiosRequestConfig<any> = {
       data: { id: updateId },
+    };
+    try {
+      await axiosPrivate.delete("/product/unit/delete", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
     }
-    await axiosPrivate.delete("/product/unit/delete", data);
     mutate(`/product/unit/all?page=${currentPage}&search=${search}`);
     onCloseDeleteModal();
   };
@@ -136,6 +168,7 @@ export default function Satuan() {
 
   const [updateId, setUpdateId] = useState("");
   const [initName, setInitName] = useState("");
+  const [satuan, setSatuan] = useState("");
 
   return (
     <AdminLayout>
@@ -227,7 +260,10 @@ export default function Satuan() {
                       </button>
                       <button
                         className="text-[#FB1919] text-md"
-                        onClick={() => {setUpdateId(col.id as string); setOpenDeleteModal(true);}}
+                        onClick={() => {
+                          setUpdateId(col.id as string);
+                          setOpenDeleteModal(true);
+                        }}
                       >
                         Hapus
                       </button>
@@ -278,10 +314,13 @@ export default function Satuan() {
                   placeholder="Nama Produk"
                   defaultValue={initName}
                   value={initName}
-                  onFocus={(e) => e.target.value = initName}
-                  {...registerEdit("name", { required: true, onChange(event) {
-                    setInitName(event.target.value);
-                  },})}
+                  onFocus={(e) => (e.target.value = initName)}
+                  {...registerEdit("name", {
+                    required: true,
+                    onChange(event) {
+                      setInitName(event.target.value);
+                    },
+                  })}
                 />
               </div>
               <button
@@ -316,9 +355,16 @@ export default function Satuan() {
                 </label>
                 <input
                   type="text"
+                  value={satuan}
+                  onFocus={(e) => (e.target.value = satuan)}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                   placeholder="Nama Produk"
-                  {...register("name", { required: true })}
+                  {...register("name", {
+                    required: true,
+                    onChange(event) {
+                      setSatuan(event.target.value);
+                    },
+                  })}
                 ></input>
               </div>
               <button

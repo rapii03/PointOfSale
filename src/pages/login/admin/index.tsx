@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/utils/axios";
 import useCookies from "@/hooks/useCookies";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 
 type FormValues = {
   email: string;
@@ -16,6 +17,8 @@ type FormValues = {
 };
 
 export default function Home() {
+  const axiosPrivate = useAxiosPrivate();
+
   const [Hide, setHide] = React.useState(true);
   const [helper, setHelper] = React.useState(
     ""
@@ -25,7 +28,9 @@ export default function Home() {
 
   const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
   const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
+  const [imageProfile, setImageProfile] = useLocalStorage("image", "");
   const [nickname, setNickname] = useLocalStorage("nickname", "");
+  const [username, setUsername] = useLocalStorage("username", "");
 
   const {
     register,
@@ -38,25 +43,18 @@ export default function Home() {
   const router = useRouter();
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    // if (data.email === "admin@gmail.com" && data.password === "12345678") {
-    //   setValidate(false);
-
-    //   console.log(data);
-    //   console.log("Login Success");
-    //   alert("Login Success");
-    //   router.push("/dashboard-admin");
-    // } else {
-    //   setValidate(true);
-    //   console.log(data);
-    //   console.log("Login Fail");
-    //   alert("Login Fail");
-    // }
     try {
       const response = await axiosInstance.post("/auth/admin/login", data);
-      console.log(response.data);
       setRefreshToken(response.data.data.refresh_token);
       setAccessToken(response.data.data.access_token);
       setNickname(response.data.data.nickname);
+      const profile = await axiosPrivate.get("/admin/profile", {
+        headers: {
+          Authorization: `Bearer ${response.data.data.access_token}`,
+        }
+      });
+      setUsername(profile.data.data.username);
+      setImageProfile(profile.data.data.image);
       router.push("/dashboard-admin");
     } catch (error: any) {
       if(error.response.status === 400) {

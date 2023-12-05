@@ -15,12 +15,14 @@ type Props = {
 const AdminLayout = ({ children }: Props) => {
   const router = useRouter();
   const [check, setCheck] = useState(false);
+  const [username, setUsername] = useLocalStorage("username", "");
   const [nickname, setNickname] = useLocalStorage("nickname", "");
+  const [imageProfile, setImageProfile] = useLocalStorage("image", "");
   const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
   
   useEffect(() => {
     const result: boolean = checkAuth(refreshToken);
-    redirectLogin(!result || (nickname !== "OPM" && nickname !== "AANG"), router);
+    redirectLogin(!result || !username || (nickname !== "OPM" && nickname !== "AANG"), router);
     setCheck(result);
   })
 
@@ -36,7 +38,7 @@ const AdminLayout = ({ children }: Props) => {
       <AdminMenu></AdminMenu>
     </div>
     <div className="bg-[#FAFAFA] w-4/5 h-7/8 rounded-lg p-8  ">
-      <HeaderAdmin></HeaderAdmin>
+      <HeaderAdmin profile={{username, nickname, imageProfile}}></HeaderAdmin>
 
       {children}
     </div>

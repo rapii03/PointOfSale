@@ -2,11 +2,56 @@
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Searchbar from "@/components/Searchbar";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { AxiosRequestConfig } from "axios";
 import { Modal, Pagination } from "flowbite-react";
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import useSWR from "swr";
+import { SWRResponse, mutate } from "swr";
 
 export default function Kategori() {
+  
+  interface Data {
+    id?: string;
+    name: string;
+  }
+
+  interface Kategori {
+    items: Data[];
+    meta: any;
+  }
+  
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [kategori, setKategori] = useState("");
+  const [updateId, setUpdateId] = useState("");
+  const [initName, setInitName] = useState("");
+
+  const {
+    data: dataKategori,
+    error,
+    isLoading,
+  }: SWRResponse<Kategori, any, boolean> = useSWR(
+    `/product/category/all?page=${currentPage}&search=${search}`,
+    (url) =>
+      axiosPrivate
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => res.data?.data)
+  );
+
+  const handleSearch = (e: any) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
+
   const paginationTheme = {
     pages: {
       base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px border border-[#FF6B35] rounded-md",
@@ -34,29 +79,18 @@ export default function Kategori() {
 
   const columns = ["No", "Nama Kategori", "Aksi"];
 
-  interface Kategori {
-    id?: number;
-    nama: string;
-  }
-  //Format Data Buat Kategori
-  const dataKategori: Kategori[] = [
-    { id: 1, nama: "Makanan" },
-    { id: 2, nama: "Makanan" },
-    { id: 3, nama: "Minuman" },
-    { id: 4, nama: "Minuman" },
-    { id: 5, nama: "Minuman" },
-  ];
-
-  const [currentPage, setCurrentPage] = useState(1);
   const onPageChange = (page: number) => setCurrentPage(page);
 
   const [openModal, setOpenModal] = useState(false);
   function onCloseModal() {
     setOpenModal(false);
+    setInitName("");
+    setUpdateId("");
   }
   const [openAddModal, setOpenAddModal] = useState(false);
   function onCloseAddModal() {
     setOpenAddModal(false);
+    setKategori("");
   }
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -64,13 +98,58 @@ export default function Kategori() {
     setOpenDeleteModal(false);
   }
 
-  const { register, handleSubmit } = useForm<Kategori>();
-  const onSubmit: SubmitHandler<Kategori> = (data) => {
-    console.log(data);
+  const { register, handleSubmit } = useForm<Data>();
+  const { register: registerEdit, handleSubmit: handleSubmitEdit } = useForm<Data>();
+
+  const onSubmit: SubmitHandler<Data> = async (data) => {
+    try {
+      await axiosPrivate.post("/product/category/add", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/product/category/all?page=${currentPage}&search=${search}`);
+    onCloseAddModal();
+  };
+
+  const onSubmitEdit: SubmitHandler<Data> = async (data) => {
+    data.id = updateId;
+    try {
+      await axiosPrivate.put("/product/category/update", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/product/category/all?page=${currentPage}&search=${search}`);
     onCloseModal();
   };
-  const handleDelete = () => {
-    console.log("Delete");
+
+  const handleDelete = async () => {
+    const data: AxiosRequestConfig<any> = {
+      data: { id: updateId },
+    };
+    try {
+      await axiosPrivate.delete("/product/category/delete", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/product/unit/all?page=${currentPage}&search=${search}`);
     onCloseDeleteModal();
   };
 
@@ -78,7 +157,7 @@ export default function Kategori() {
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
       <div className="flex h-fit justify-between items-center mb-6">
-        <Searchbar placeholder="Cari Kategori" />
+        <Searchbar placeholder="Cari Kategori" onChange={handleSearch} />
         <button
           className="bg-[#FF6B35] h-fit px-3 py-1 rounded-md text-white text-md flex justify-center items-center gap-2"
           onClick={() => setOpenAddModal(true)}
@@ -123,7 +202,7 @@ export default function Kategori() {
             </tr>
           </thead>
           <tbody>
-            {dataKategori.map((col, colIndex) => (
+            {dataKategori?.items?.map((col, colIndex) => (
               <tr>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-center items-center h-12 border-b">
@@ -132,20 +211,27 @@ export default function Kategori() {
                 </td>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-start items-center h-12 border-b">
-                    {col.nama}
+                    {col.name}
                   </div>
                 </td>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                     <button
                       className="text-[#FF6B35] text-md"
-                      onClick={() => setOpenModal(true)}
+                      onClick={(e) => {
+                        setInitName(col.name);
+                        setUpdateId(col.id as string);
+                        setOpenModal(true);
+                      }}
                     >
                       Edit
                     </button>
                     <button
                       className="text-[#FB1919] text-md"
-                      onClick={() => setOpenDeleteModal(true)}
+                      onClick={() => {
+                        setUpdateId(col.id as string);
+                        setOpenDeleteModal(true);
+                      }}
                     >
                       Hapus
                     </button>
@@ -157,16 +243,18 @@ export default function Kategori() {
         </table>
       </div>
       <div className="flex overflow-x-auto sm:justify-end">
-        <Pagination
-          theme={paginationTheme}
-          layout="pagination"
-          currentPage={currentPage}
-          totalPages={10}
-          onPageChange={onPageChange}
-          previousLabel=""
-          nextLabel=""
-          showIcons
-        />
+      {dataKategori?.meta?.totalPages > 1 && (
+          <Pagination
+            theme={paginationTheme}
+            layout="pagination"
+            currentPage={currentPage}
+            totalPages={dataKategori?.meta?.totalPages}
+            onPageChange={onPageChange}
+            previousLabel=""
+            nextLabel=""
+            showIcons
+          />
+        )}
       </div>
 
       {/* Edit Modal */}
@@ -181,7 +269,7 @@ export default function Kategori() {
           <div className="space-y-6">
             <form
               className="flex flex-col gap-y-3 "
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmitEdit(onSubmitEdit)}
             >
               <p className="w-1/3 rounded-lg font-semibold">Edit Kategori</p>
               <div className="">
@@ -192,7 +280,7 @@ export default function Kategori() {
                   type="text"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                   placeholder="Nama Produk"
-                  {...register("nama", { required: true })}
+                  {...registerEdit("name", { required: true })}
                 ></input>
               </div>
               <button
@@ -226,10 +314,14 @@ export default function Kategori() {
                   Nama Kategori
                 </label>
                 <input
+                  value={kategori}
                   type="text"
+                  onFocus={(e) => (e.target.value = kategori)}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                   placeholder="Nama Produk"
-                  {...register("nama", { required: true })}
+                  {...register("name", { required: true, onChange(event) {
+                    setKategori(event.target.value);
+                  }, })}
                 ></input>
               </div>
               <button
