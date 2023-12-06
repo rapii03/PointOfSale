@@ -114,6 +114,9 @@ const DetailProduk = () => {
         .then((res) => res.data)
   );
 
+  console.log(dataKategori);
+  
+
   const {
     data: dataUnit,
     error: errorUnit,

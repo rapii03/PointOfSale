@@ -10,14 +10,18 @@ import { Modal, Pagination } from "flowbite-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import useSWR from "swr"
+import useSWR from "swr";
 import { SWRResponse, mutate } from "swr";
-
+import { useEdgeStore } from "@/lib/edgestore";
+import UploadFile from "@/hooks/UploadImage";
 
 export default function KelolaAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const [nickname, setNickname] = useLocalStorage("nickname", "");
+  const { edgestore } = useEdgeStore();
+  const [file, setFile] = useState<File | null>(null);
+  const [path, setPath] = useState("");
 
   useEffect(() => {
     if (nickname === "OPM") {
@@ -25,7 +29,34 @@ export default function KelolaAdmin() {
     } else {
       router.push("/dashboard-admin");
     }
-  })
+  });
+
+  const handleFileUpload = async (file: File) => {
+    if(file){
+      const res = await edgestore.publicFiles.upload({
+        file,
+        onProgressChange: (progress) => {
+          // you can use this to show a progress bar
+          console.log(progress);
+        },
+      });
+      // console.log(res.url);
+      setPath(res.url);
+    }
+  }
+
+  const handleFileReplace = async (file: File, path: string) => {
+    if(file){
+      const res = await edgestore.publicFiles.upload({
+        file,
+        options: {
+          replaceTargetUrl: path,
+        },
+      });
+      setPath(res.url);
+      // console.log(res.url);
+    }
+  }
 
   const axiosPrivate = useAxiosPrivate();
   const [accessToken, _] = useLocalStorage("accessToken", "");
@@ -35,6 +66,7 @@ export default function KelolaAdmin() {
   const [kataSandiAdmin, setKataSandiAdmin] = useState("");
   const [emailAdmin, setEmailAdmin] = useState("");
   const [updateId, setUpdateId] = useState("");
+  const [updateImg, setUpdateImg] = useState("");
   const [initName, setInitName] = useState("");
   const [initPass, setInitPass] = useState("");
   const [initEmail, setInitEmail] = useState("");
@@ -121,10 +153,12 @@ export default function KelolaAdmin() {
   }
 
   const { register, handleSubmit } = useForm<Data>();
-  const { register: registerEdit, handleSubmit: handleSubmitEdit } = useForm<Data>();
+  const { register: registerEdit, handleSubmit: handleSubmitEdit } =
+    useForm<Data>();
   const onSubmit: SubmitHandler<Data> = async (data) => {
     try {
-      data.image = "img";
+      await handleFileUpload(file as File);
+      data.image = path;
       await axiosPrivate.post("/admin/add", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;
@@ -140,8 +174,10 @@ export default function KelolaAdmin() {
   };
   const onSubmitEdit: SubmitHandler<Data> = async (data) => {
     data.id = updateId;
-    data.image = "alamatimg";
     try {
+      await handleFileReplace(file as File, updateImg);
+      data.image = path;
+      console.log(path);
       await axiosPrivate.put("/admin/update", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;
@@ -252,6 +288,7 @@ export default function KelolaAdmin() {
                         setInitName(col.username);
                         setInitEmail(col.email);
                         setUpdateId(col.id as string);
+                        setUpdateImg(col.image as string);
                         setOpenModal(true);
                       }}
                     >
@@ -274,7 +311,7 @@ export default function KelolaAdmin() {
         </table>
       </div>
       <div className="flex overflow-x-auto sm:justify-end">
-      {dataAdmin?.meta?.totalPages > 1 && (
+        {dataAdmin?.meta?.totalPages > 1 && (
           <Pagination
             theme={paginationTheme}
             layout="pagination"
@@ -314,9 +351,12 @@ export default function KelolaAdmin() {
                     onFocus={(e) => (e.target.value = initName)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 mb-2"
                     placeholder="Nama Admin"
-                    {...registerEdit("username", { required: true, onChange(event) {
-                      setInitName(event.target.value);
-                    }, })}
+                    {...registerEdit("username", {
+                      required: true,
+                      onChange(event) {
+                        setInitName(event.target.value);
+                      },
+                    })}
                   ></input>
                   <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Kata Sandi
@@ -327,9 +367,11 @@ export default function KelolaAdmin() {
                     onFocus={(e) => (e.target.value = initPass)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     placeholder="Kata Sandi"
-                    {...registerEdit("password", { onChange(event) {
-                      setInitPass(event.target.value);
-                    },})}
+                    {...registerEdit("password", {
+                      onChange(event) {
+                        setInitPass(event.target.value);
+                      },
+                    })}
                   ></input>
                 </div>
                 <div className="w-1/2 ">
@@ -342,9 +384,12 @@ export default function KelolaAdmin() {
                     onFocus={(e) => (e.target.value = initEmail)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 mb-2"
                     placeholder="Email"
-                    {...registerEdit("email", { required: true, onChange(event) {
-                      setInitEmail(event.target.value);
-                    }, })}
+                    {...registerEdit("email", {
+                      required: true,
+                      onChange(event) {
+                        setInitEmail(event.target.value);
+                      },
+                    })}
                   ></input>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white">
                     Foto Admin
@@ -359,11 +404,14 @@ export default function KelolaAdmin() {
                           id="file-upload"
                           type="file"
                           className="hidden"
+                          onChange={(e) => {
+                            setFile(e.target.files?.[0] ?? null);
+                          }}
                         />
                         Unggah
                       </label>
                       <p className="text-md text-[#B7B7B7]">
-                        Unggah Gambar
+                        {file === null ? "Unggah Gambar" : file?.name}
                         {/* {dataForm.gambar === "" ? "Unggah Gambar" : dataForm.gambar} */}
                       </p>
                     </div>
@@ -409,9 +457,12 @@ export default function KelolaAdmin() {
                     onFocus={(e) => (e.target.value = namaAdmin)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 mb-2"
                     placeholder="Nama Admin"
-                    {...register("username", { required: true, onChange(event) {
-                      setNamaAdmin(event.target.value);
-                    }, })}
+                    {...register("username", {
+                      required: true,
+                      onChange(event) {
+                        setNamaAdmin(event.target.value);
+                      },
+                    })}
                   ></input>
                   <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Kata Sandi
@@ -422,9 +473,12 @@ export default function KelolaAdmin() {
                     onFocus={(e) => (e.target.value = kataSandiAdmin)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     placeholder="Kata Sandi"
-                    {...register("password", { required: true, onChange(event) {
-                      setKataSandiAdmin(event.target.value);
-                    }, })}
+                    {...register("password", {
+                      required: true,
+                      onChange(event) {
+                        setKataSandiAdmin(event.target.value);
+                      },
+                    })}
                   ></input>
                 </div>
                 <div className="w-1/2">
@@ -437,9 +491,12 @@ export default function KelolaAdmin() {
                     onFocus={(e) => (e.target.value = emailAdmin)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 mb-2"
                     placeholder="Email"
-                    {...register("email", { required: true, onChange(event) {
-                      setEmailAdmin(event.target.value);
-                    }, })}
+                    {...register("email", {
+                      required: true,
+                      onChange(event) {
+                        setEmailAdmin(event.target.value);
+                      },
+                    })}
                   ></input>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white">
                     Foto Admin
@@ -454,12 +511,15 @@ export default function KelolaAdmin() {
                           id="file-upload"
                           type="file"
                           className="hidden"
+                          onChange={(e) => {
+                            setFile(e.target.files?.[0] ?? null);
+                          }}
                         />
                         Unggah
                       </label>
                       <p className="text-md text-[#B7B7B7]">
-                        Unggah Gambar
-                        {/* {dataForm.gambar === "" ? "Unggah Gambar" : dataForm.gambar} */}
+                        {/* Unggah Gambar */}
+                        {file === null ? "Unggah Gambar" : file?.name}
                       </p>
                     </div>
                   </div>
