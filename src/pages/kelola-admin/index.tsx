@@ -3,11 +3,16 @@ import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import loading from "@/components/loading";
 import Searchbar from "@/components/Searchbar";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import { AxiosRequestConfig } from "axios";
 import { Modal, Pagination } from "flowbite-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import useSWR from "swr"
+import { SWRResponse, mutate } from "swr";
+
 
 export default function KelolaAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -21,6 +26,52 @@ export default function KelolaAdmin() {
       router.push("/dashboard-admin");
     }
   })
+
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [namaAdmin, setNamaAdmin] = useState("");
+  const [kataSandiAdmin, setKataSandiAdmin] = useState("");
+  const [emailAdmin, setEmailAdmin] = useState("");
+  const [updateId, setUpdateId] = useState("");
+  const [initName, setInitName] = useState("");
+  const [initPass, setInitPass] = useState("");
+  const [initEmail, setInitEmail] = useState("");
+
+  interface Data {
+    id?: string;
+    username: string;
+    email: string;
+    password: string;
+    image?: string;
+  }
+
+  interface Admin {
+    items: Data[];
+    meta: any;
+  }
+
+  const {
+    data: dataAdmin,
+    error,
+    isLoading,
+  }: SWRResponse<Admin, any, boolean> = useSWR(
+    `/admin/all?page=${currentPage}&search=${search}`,
+    (url) =>
+      axiosPrivate
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => res.data?.data)
+  );
+
+  const handleSearch = (e: any) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
 
   const paginationTheme = {
     pages: {
@@ -48,36 +99,8 @@ export default function KelolaAdmin() {
 
   const columns = ["No", "Nama Akun Admin", "Email", "Aksi"];
 
-  interface kelolaAdmin {
-    id?: number;
-    nama: string;
-    email: string;
-    sandi: string;
-    gambar?: string;
-  }
   //Format Data Buat Kelola Admin
-  const dataAdmin: kelolaAdmin[] = [
-    {
-      id: 1,
-      nama: "Amel Sinta",
-      email: "amel123@gmail.com",
-      sandi: "123456",
-    },
-    {
-      id: 2,
-      nama: "Ndaru",
-      email: "amel123@gmail.com",
-      sandi: "123456",
-    },
-    {
-      id: 3,
-      nama: "Dinda",
-      email: "amel123@gmail.com",
-      sandi: "123456",
-    },
-  ];
 
-  const [currentPage, setCurrentPage] = useState(1);
   const onPageChange = (page: number) => setCurrentPage(page);
 
   const [openModal, setOpenModal] = useState(false);
@@ -86,6 +109,9 @@ export default function KelolaAdmin() {
   }
   const [openAddModal, setOpenAddModal] = useState(false);
   function onCloseAddModal() {
+    setNamaAdmin("");
+    setKataSandiAdmin("");
+    setEmailAdmin("");
     setOpenAddModal(false);
   }
 
@@ -94,13 +120,57 @@ export default function KelolaAdmin() {
     setOpenDeleteModal(false);
   }
 
-  const { register, handleSubmit } = useForm<kelolaAdmin>();
-  const onSubmit: SubmitHandler<kelolaAdmin> = (data) => {
-    console.log(data);
+  const { register, handleSubmit } = useForm<Data>();
+  const { register: registerEdit, handleSubmit: handleSubmitEdit } = useForm<Data>();
+  const onSubmit: SubmitHandler<Data> = async (data) => {
+    try {
+      data.image = "img";
+      await axiosPrivate.post("/admin/add", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/admin/all?page=${currentPage}&search=${search}`);
+    onCloseAddModal();
+  };
+  const onSubmitEdit: SubmitHandler<Data> = async (data) => {
+    data.id = updateId;
+    data.image = "alamatimg";
+    try {
+      await axiosPrivate.put("/admin/update", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/admin/all?page=${currentPage}&search=${search}`);
     onCloseModal();
   };
-  const handleDelete = () => {
-    console.log("Delete");
+  const handleDelete = async () => {
+    const data: AxiosRequestConfig<any> = {
+      data: { id: updateId },
+    };
+    try {
+      await axiosPrivate.delete("/admin/delete", data);
+    } catch (e: any) {
+      let statusText: string | undefined = e?.response?.statusText;
+      let msg: string | undefined = e?.response?.data?.message;
+      let status: number | undefined = e?.response?.status;
+      if (status === 400) {
+        msg = e?.response?.data?.message[0]?.message;
+      }
+      alert(statusText + " : " + status + "\nPesan : " + msg);
+    }
+    mutate(`/cashier/all?page=${currentPage}&search=${search}`);
     onCloseDeleteModal();
   };
 
@@ -112,7 +182,7 @@ export default function KelolaAdmin() {
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
       <div className="flex h-fit justify-between items-center mb-6">
-        <Searchbar placeholder="Cari Akun Admin" />
+        <Searchbar placeholder="Cari Akun Admin" onChange={handleSearch} />
         <button
           className="bg-[#FF6B35] h-fit px-3 py-1 rounded-md text-white text-md flex justify-center items-center gap-2"
           onClick={() => setOpenAddModal(true)}
@@ -157,7 +227,7 @@ export default function KelolaAdmin() {
             </tr>
           </thead>
           <tbody>
-            {dataAdmin.map((col, colIndex) => (
+            {dataAdmin?.items?.map((col, colIndex) => (
               <tr>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
@@ -166,7 +236,7 @@ export default function KelolaAdmin() {
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.nama}
+                    {col.username}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
@@ -178,13 +248,21 @@ export default function KelolaAdmin() {
                   <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                     <button
                       className="text-[#FF6B35] text-md"
-                      onClick={() => setOpenModal(true)}
+                      onClick={(e) => {
+                        setInitName(col.username);
+                        setInitEmail(col.email);
+                        setUpdateId(col.id as string);
+                        setOpenModal(true);
+                      }}
                     >
                       Edit
                     </button>
                     <button
                       className="text-[#FB1919] text-md"
-                      onClick={() => setOpenDeleteModal(true)}
+                      onClick={() => {
+                        setUpdateId(col.id as string);
+                        setOpenDeleteModal(true);
+                      }}
                     >
                       Hapus
                     </button>
@@ -196,16 +274,18 @@ export default function KelolaAdmin() {
         </table>
       </div>
       <div className="flex overflow-x-auto sm:justify-end">
-        <Pagination
-          theme={paginationTheme}
-          layout="pagination"
-          currentPage={currentPage}
-          totalPages={10}
-          onPageChange={onPageChange}
-          previousLabel=""
-          nextLabel=""
-          showIcons
-        />
+      {dataAdmin?.meta?.totalPages > 1 && (
+          <Pagination
+            theme={paginationTheme}
+            layout="pagination"
+            currentPage={currentPage}
+            totalPages={dataAdmin?.meta?.totalPages}
+            onPageChange={onPageChange}
+            previousLabel=""
+            nextLabel=""
+            showIcons
+          />
+        )}
       </div>
 
       {/* Edit Modal */}
@@ -220,7 +300,7 @@ export default function KelolaAdmin() {
           <div className="space-y-6">
             <form
               className="flex flex-col gap-y-3 "
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmitEdit(onSubmitEdit)}
             >
               <p className="w-2/3 rounded-lg font-semibold">Edit Admin</p>
               <div className="flex w-full gap-5">
@@ -230,18 +310,26 @@ export default function KelolaAdmin() {
                   </label>
                   <input
                     type="text"
+                    defaultValue={initName}
+                    onFocus={(e) => (e.target.value = initName)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 mb-2"
                     placeholder="Nama Admin"
-                    {...register("nama", { required: true })}
+                    {...registerEdit("username", { required: true, onChange(event) {
+                      setInitName(event.target.value);
+                    }, })}
                   ></input>
                   <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Kata Sandi
                   </label>
                   <input
                     type="text"
+                    defaultValue={initPass}
+                    onFocus={(e) => (e.target.value = initPass)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     placeholder="Kata Sandi"
-                    {...register("sandi", { required: true })}
+                    {...registerEdit("password", { onChange(event) {
+                      setInitPass(event.target.value);
+                    },})}
                   ></input>
                 </div>
                 <div className="w-1/2 ">
@@ -250,9 +338,13 @@ export default function KelolaAdmin() {
                   </label>
                   <input
                     type="text"
+                    defaultValue={initEmail}
+                    onFocus={(e) => (e.target.value = initEmail)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 mb-2"
                     placeholder="Email"
-                    {...register("email", { required: true })}
+                    {...registerEdit("email", { required: true, onChange(event) {
+                      setInitEmail(event.target.value);
+                    }, })}
                   ></input>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white">
                     Foto Admin
@@ -313,18 +405,26 @@ export default function KelolaAdmin() {
                   </label>
                   <input
                     type="text"
+                    value={namaAdmin}
+                    onFocus={(e) => (e.target.value = namaAdmin)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 mb-2"
                     placeholder="Nama Admin"
-                    {...register("nama", { required: true })}
+                    {...register("username", { required: true, onChange(event) {
+                      setNamaAdmin(event.target.value);
+                    }, })}
                   ></input>
                   <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Kata Sandi
                   </label>
                   <input
                     type="text"
+                    value={kataSandiAdmin}
+                    onFocus={(e) => (e.target.value = kataSandiAdmin)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     placeholder="Kata Sandi"
-                    {...register("sandi", { required: true })}
+                    {...register("password", { required: true, onChange(event) {
+                      setKataSandiAdmin(event.target.value);
+                    }, })}
                   ></input>
                 </div>
                 <div className="w-1/2">
@@ -333,9 +433,13 @@ export default function KelolaAdmin() {
                   </label>
                   <input
                     type="text"
+                    value={emailAdmin}
+                    onFocus={(e) => (e.target.value = emailAdmin)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 mb-2"
                     placeholder="Email"
-                    {...register("email", { required: true })}
+                    {...register("email", { required: true, onChange(event) {
+                      setEmailAdmin(event.target.value);
+                    }, })}
                   ></input>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white">
                     Foto Admin
