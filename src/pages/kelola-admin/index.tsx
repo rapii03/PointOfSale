@@ -13,15 +13,12 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import useSWR from "swr";
 import { SWRResponse, mutate } from "swr";
 import { useEdgeStore } from "@/lib/edgestore";
-import UploadFile from "@/hooks/UploadImage";
 
 export default function KelolaAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const [nickname, setNickname] = useLocalStorage("nickname", "");
-  const { edgestore } = useEdgeStore();
-  const [file, setFile] = useState<File | null>(null);
-  const [path, setPath] = useState("");
+  
 
   useEffect(() => {
     if (nickname === "OPM") {
@@ -30,6 +27,11 @@ export default function KelolaAdmin() {
       router.push("/dashboard-admin");
     }
   });
+
+  const { edgestore } = useEdgeStore();
+  const [file, setFile] = useState<File | null>(null);
+  const [path, setPath] = useState("");
+  const [updateImg, setUpdateImg] = useState("");
 
   const handleFileUpload = async (file: File) => {
     if(file){
@@ -58,6 +60,12 @@ export default function KelolaAdmin() {
     }
   }
 
+  const handleFileDelete = async (path: string) => {
+    await edgestore.publicFiles.delete({
+      url: path,
+    });
+  }
+
   const axiosPrivate = useAxiosPrivate();
   const [accessToken, _] = useLocalStorage("accessToken", "");
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,7 +74,6 @@ export default function KelolaAdmin() {
   const [kataSandiAdmin, setKataSandiAdmin] = useState("");
   const [emailAdmin, setEmailAdmin] = useState("");
   const [updateId, setUpdateId] = useState("");
-  const [updateImg, setUpdateImg] = useState("");
   const [initName, setInitName] = useState("");
   const [initPass, setInitPass] = useState("");
   const [initEmail, setInitEmail] = useState("");
@@ -177,7 +184,6 @@ export default function KelolaAdmin() {
     try {
       await handleFileReplace(file as File, updateImg);
       data.image = path;
-      console.log(path);
       await axiosPrivate.put("/admin/update", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;
@@ -196,6 +202,8 @@ export default function KelolaAdmin() {
       data: { id: updateId },
     };
     try {
+      // console.log(updateImg);
+      // await handleFileDelete(updateImg);
       await axiosPrivate.delete("/admin/delete", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;
@@ -298,6 +306,7 @@ export default function KelolaAdmin() {
                       className="text-[#FB1919] text-md"
                       onClick={() => {
                         setUpdateId(col.id as string);
+                        setUpdateImg(col.image as string);
                         setOpenDeleteModal(true);
                       }}
                     >

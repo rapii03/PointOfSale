@@ -8,8 +8,9 @@ import { Modal, Pagination } from "flowbite-react";
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { SWRResponse, mutate } from "swr";
-import useSWR from "swr"
+import useSWR from "swr";
 import { AxiosRequestConfig } from "axios";
+import { useEdgeStore } from "@/lib/edgestore";
 
 export default function KelolaKasir() {
   interface Data {
@@ -20,8 +21,8 @@ export default function KelolaKasir() {
   }
 
   interface Kasir {
-    items : Data[]
-    meta : any
+    items: Data[];
+    meta: any;
   }
 
   const axiosPrivate = useAxiosPrivate();
@@ -99,11 +100,52 @@ export default function KelolaKasir() {
   }
 
   const { register, handleSubmit } = useForm<Data>();
-  const { register: registerEdit, handleSubmit: handleSubmitEdit } = useForm<Data>();
+  const { register: registerEdit, handleSubmit: handleSubmitEdit } =
+    useForm<Data>();
+
+  const { edgestore } = useEdgeStore();
+  const [file, setFile] = useState<File | null>(null);
+  const [path, setPath] = useState("");
+  const [updateImg, setUpdateImg] = useState("");
+
+  const handleFileUpload = async (file: File) => {
+    if (file) {
+      const res = await edgestore.publicFiles.upload({
+        file,
+        onProgressChange: (progress) => {
+          // you can use this to show a progress bar
+          console.log(progress);
+        },
+      });
+      // console.log(res.url);
+      setPath(res.url);
+    }
+  };
+
+  const handleFileReplace = async (file: File, path: string) => {
+    if (file) {
+      const res = await edgestore.publicFiles.upload({
+        file,
+        options: {
+          replaceTargetUrl: path,
+        },
+      });
+      setPath(res.url);
+      // console.log(res.url);
+    }
+  };
+
+  const handleFileDelete = async (path: string) => {
+    await edgestore.publicFiles.delete({
+      url: path,
+    });
+  };
 
   const onSubmit: SubmitHandler<Data> = async (data) => {
     try {
-      data.image = "img";
+      await handleFileUpload(file as File);
+      data.image = path;
+      // console.log(data);
       await axiosPrivate.post("/cashier/add", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;
@@ -120,8 +162,9 @@ export default function KelolaKasir() {
 
   const onSubmitEdit: SubmitHandler<Data> = async (data) => {
     data.id = updateId;
-    data.image = "alamatimg";
     try {
+      await handleFileReplace(file as File, updateImg);
+      data.image = path;
       await axiosPrivate.put("/cashier/update", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;
@@ -159,7 +202,7 @@ export default function KelolaKasir() {
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
       <div className="flex h-fit justify-between items-center mb-6">
-        <Searchbar placeholder="Cari Akun Kasir" onChange={handleSearch}/>
+        <Searchbar placeholder="Cari Akun Kasir" onChange={handleSearch} />
         <button
           className="bg-[#FF6B35] h-fit px-3 py-1 rounded-md text-white text-md flex justify-center items-center gap-2"
           onClick={() => setOpenAddModal(true)}
@@ -228,6 +271,7 @@ export default function KelolaKasir() {
                       onClick={(e) => {
                         setInitName(col.username);
                         setUpdateId(col.id as string);
+                        setUpdateImg(col.image as string);
                         setOpenModal(true);
                       }}
                     >
@@ -237,6 +281,7 @@ export default function KelolaKasir() {
                       className="text-[#FB1919] text-md"
                       onClick={() => {
                         setUpdateId(col.id as string);
+                        setUpdateImg(col.image as string);
                         setOpenDeleteModal(true);
                       }}
                     >
@@ -250,7 +295,7 @@ export default function KelolaKasir() {
         </table>
       </div>
       <div className="flex overflow-x-auto sm:justify-end">
-      {dataKasir?.meta?.totalPages > 1 && (
+        {dataKasir?.meta?.totalPages > 1 && (
           <Pagination
             theme={paginationTheme}
             layout="pagination"
@@ -290,9 +335,12 @@ export default function KelolaKasir() {
                     type="text"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     placeholder="Nama Kasir"
-                    {...registerEdit("username", { required: true, onChange(event) {
-                      setInitName(event.target.value);
-                    }, })}
+                    {...registerEdit("username", {
+                      required: true,
+                      onChange(event) {
+                        setInitName(event.target.value);
+                      },
+                    })}
                   ></input>
                 </div>
                 <div className="w-1/2 ">
@@ -309,12 +357,14 @@ export default function KelolaKasir() {
                           id="file-upload"
                           type="file"
                           className="hidden"
+                          onChange={(e) => {
+                            setFile(e.target.files?.[0] ?? null);
+                          }}
                         />
                         Unggah
                       </label>
                       <p className="text-md text-[#B7B7B7]">
-                        Unggah Gambar
-                        {/* {dataForm.gambar === "" ? "Unggah Gambar" : dataForm.gambar} */}
+                        {file === null ? "Unggah Gambar" : file?.name}
                       </p>
                     </div>
                   </div>
@@ -359,9 +409,12 @@ export default function KelolaKasir() {
                     onFocus={(e) => (e.target.value = namaKasir)}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     placeholder="Nama Kasir"
-                    {...register("username", { required: true, onChange(event) {
-                      setNamaKasir(event.target.value);
-                    }, })}
+                    {...register("username", {
+                      required: true,
+                      onChange(event) {
+                        setNamaKasir(event.target.value);
+                      },
+                    })}
                   ></input>
                 </div>
                 <div className="w-1/2 ">
@@ -378,12 +431,14 @@ export default function KelolaKasir() {
                           id="file-upload"
                           type="file"
                           className="hidden"
+                          onChange={(e) => {
+                            setFile(e.target.files?.[0] ?? null);
+                          }}
                         />
                         Unggah
                       </label>
                       <p className="text-md text-[#B7B7B7]">
-                        Unggah Gambar
-                        {/* {dataForm.gambar === "" ? "Unggah Gambar" : dataForm.gambar} */}
+                        {file === null ? "Unggah Gambar" : file?.name}
                       </p>
                     </div>
                   </div>
