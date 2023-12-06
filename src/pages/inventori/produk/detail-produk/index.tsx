@@ -7,46 +7,165 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { GetServerSideProps, NextPage } from "next";
 import axios from "axios";
 import { useRouter } from "next/router";
+import { SWRResponse, mutate } from "swr";
+import useSWR from "swr";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { useAppContext } from "@/hooks/useContext";
 // import fs from "fs/promises";
 // import path from "path";
 // import ImageUploader from "@/components/handleUpload";
 
-interface Props {
-  dirs: string[];
+// interface Props {
+//   dirs: string[];
+// }
+
+interface Price{
+  id: string;
+  price: string;
+}
+
+interface Stock{
+  id: string;
+  stock: number;
+}
+
+interface Unit{
+  id: string;
+  name: string;
+}
+
+interface Group {
+  price?: Price;
+  stock?: Stock;
+  unit?: Unit;
+}
+
+interface Kategori {
+  id: string;
+  name: string;
 }
 
 interface IDataForm {
-  nama?: string;
-  kategori?: string;
+  id?: string;
+  name?: string;
+  image?: string;
   tanggal?: boolean;
-  gambar?: string;
-  modal: IModalData[];
+  category?: Kategori[];
+  group: Group[];
 }
 
-interface IModalData {
-  satuan?: string;
-  stok?: number;
-  harga?: number;
+
+interface ListKategori {
+  data : Kategori[];
 }
 
-const DetailProduk: NextPage<Props> = ({ dirs }) => {
+interface ListUnit {
+  data : Unit[];
+}
+
+const DetailProduk = () => {
+
+  const [dataForm, setDataForm] = useState<IDataForm>({
+    id: "",
+    name: "",
+    image: "",
+    category: [],
+    group: [],
+  });
+
+  // const myContext = useAppContext();
+
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
+
+  // const {
+  //   data: dataProduk,
+  //   error: errorProduk,
+  //   isLoading: isLoadingProduk,
+  // }: SWRResponse<ListKategori, any, boolean> = useSWR(
+  //   `/product/group/one`,
+  //   (url) =>
+  //     axiosPrivate
+  //       .post(url, {
+  //         headers: {
+  //           Authorization: `Bearer ${accessToken}`,
+  //         },
+  //         body: {
+  //           id: targetId
+  //         }
+  //       })
+  //       .then((res) => res.data)
+  // );
+
+  const {
+    data: dataKategori,
+    error,
+    isLoading,
+  }: SWRResponse<ListKategori, any, boolean> = useSWR(
+    `/product/category/list`,
+    (url) =>
+      axiosPrivate
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => res.data)
+  );
+
+  const {
+    data: dataUnit,
+    error: errorUnit,
+    isLoading: isLoadingUnit,
+  }: SWRResponse<ListUnit, any, boolean> = useSWR(
+    `/product/unit/list`,
+    (url) =>
+      axiosPrivate
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => res.data)
+  );
 
   const router = useRouter();
-  const targetId = router.query.id;
-
+  
   useEffect(() => {
-    console.log(targetId);
-  }, [])
+    const fetchData = async () => {
+      try {
+        if(router.isReady){
+          if(!router.query.id){
+            router.push("/inventori/produk");
+          }
+          const response = await axiosPrivate.post(
+            `/product/group/one`,
+            {
+              id: router.query.id
+            },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            }
+          }
+          );
+          setDataForm(response.data.data);
+        }
+      } catch (error) {
+        // Handle errors here
+        console.error('Error fetching data:', error);
+      }
+    }
+    fetchData();
+    console.log("ini query : " + router.query.id);
+    console.log("ini dataform : " + dataForm);
+  }, [router.isReady])
+
+
 
   const [openModal, setOpenModal] = useState(false);
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
-  const [dataForm, setDataForm] = useState<IDataForm>({
-    nama: "",
-    kategori: "",
-    tanggal: true,
-    gambar: "",
-    modal: [],
-  });
 
   function onCloseModal() {
     setOpenModal(false);
@@ -65,7 +184,7 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
   const handleOpenUpdateModal = (num: number) => {
     console.log(num);
     console.log(dataForm);
-    setStock(dataForm.modal[num].stok);
+    // setStock(dataForm.modal[num].stok);
     setTargetUpdate(num);
     setOpenUpdateModal(true);
   };
@@ -76,43 +195,42 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
 
   const [stock, setStock] = useState<any>(0);
   const { register, handleSubmit } = useForm<IDataForm>();
-  const { register: registerModal, handleSubmit: handleSubmitDataModal } =
-    useForm<IModalData>();
-
-  const {
-    register: registerUpdateModal,
-    handleSubmit: handleSubmitUpdateModal,
-    resetField,
-  } = useForm<IModalData>();
+  // const { register: registerModal, handleSubmit: handleSubmitDataModal } = useForm<IModalData>();
+  // const {
+  //   register: registerUpdateModal,
+  //   handleSubmit: handleSubmitUpdateModal,
+  //   resetField,
+  // } = useForm<IModalData>();
 
   const onSubmit: SubmitHandler<IDataForm> = (data) => {
-    console.log(data);
+    console.log(dataKategori);
+    
   };
 
-  const onSubmitModal: SubmitHandler<IModalData> = (data) => {
-    // handleSubmitModal(data, dataForm);
-    setDataForm({ ...dataForm, modal: [...dataForm.modal, data] });
-    onCloseModal();
-    // reset({ stok: "", harga: "" });
-  };
+  // const onSubmitModal: SubmitHandler<IModalData> = (data) => {
+  //   // handleSubmitModal(data, dataForm);
+  //   // setDataForm({ ...dataForm, modal: [...dataForm.modal, data] });
+  //   // onCloseModal();
+  //   // reset({ stok: "", harga: "" });
+  // };
 
-  const onSubmitUpdateModal: SubmitHandler<IModalData> = (data) => {
-    setDataForm({
-      ...dataForm,
-      modal: dataForm.modal.map((item, index) => {
-        if (index === targetUpdate) {
-          return {
-            ...item,
-            ...data,
-          };
-        }
-        return item;
-      }),
-    });
+  // const onSubmitUpdateModal: SubmitHandler<IModalData> = (data) => {
+  //   setDataForm({
+  //     ...dataForm,
+  //     modal: dataForm.modal.map((item, index) => {
+  //       if (index === targetUpdate) {
+  //         return {
+  //           ...item,
+  //           ...data,
+  //         };
+  //       }
+  //       return item;
+  //     }),
+  //   });
 
-    resetField("stok");
-    setOpenUpdateModal(false);
-  };
+  //   resetField("stok");
+  //   setOpenUpdateModal(false);
+  // };
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   function onCloseDeleteModal() {
@@ -147,7 +265,8 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
   };
 
   const saveData = () => {
-    alert("Data Tersimpan");
+    // alert("Data Tersimpan");
+    // console.log(dataKategori?.data);
   };
 
   return (
@@ -176,7 +295,7 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
                 type="text"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                 placeholder="Nama Produk"
-                {...register("nama", { required: true })}
+                // {...register("nama", { required: true })}
               ></input>
             </div>
             <div className="w-1/2">
@@ -186,12 +305,17 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
               <select
                 id="countries"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
-                {...register("kategori", { required: true })}
+                // {...register("kategori", { required: true })}
               >
-                <option value="">Pilih Kategori</option>
+                {dataKategori?.data?.map((categorie) => (
+                  <option value={categorie.name}>
+                    {categorie.name}
+                  </option>
+                ))}
+                {/* <option value="">Pilih Kategori</option>
                 <option value="Makanan">Makanan</option>
                 <option value="Minuman">Minuman</option>
-                <option value="Cemilan">Cemilan</option>
+                <option value="Cemilan">Cemilan</option> */}
               </select>
             </div>
           </div>
@@ -243,7 +367,7 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
                 </tr>
               </thead>
               <tbody>
-                {dataForm.modal.map((col, colIndex) => (
+                {dataForm?.group?.map((col, colIndex) => (
                   <tr>
                     <td className="border-collapse  px-0 text-center">
                       <div className="flex justify-center items-center   h-12 border-b">
@@ -252,17 +376,17 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
                     </td>
                     <td className="border-collapse  px-0 text-center">
                       <div className="flex justify-start items-center   h-12 border-b">
-                        {col.satuan}
+                        {col.unit?.name}
                       </div>
                     </td>
                     <td className="border-collapse  px-0 text-center">
                       <div className="flex justify-start items-center   h-12 border-b">
-                        {col.stok}
+                        {col.stock?.stock}
                       </div>
                     </td>
                     <td className="border-collapse  px-0 text-center">
                       <div className="flex justify-start items-center   h-12 border-b">
-                        Rp. {col.harga}
+                        Rp. {col.price?.price}
                       </div>
                     </td>
                     <td className="border-collapse  px-0 text-center">
@@ -307,7 +431,7 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
             <div className="space-y-6">
               <form
                 className="flex flex-col gap-y-5"
-                onSubmit={handleSubmitDataModal(onSubmitModal)}
+                // onSubmit={handleSubmitDataModal(onSubmitModal)}
               >
                 <div>
                   <div className="mb-2 block">
@@ -317,12 +441,17 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
                     id="satuan"
                     required
                     className="w-fit"
-                    {...registerModal("satuan")}
+                    // {...registerModal("satuan")}
                   >
-                    <option value="Pcs">Pcs</option>
+                    {dataUnit?.data?.map((item) => (
+                      <option value={item.name}>
+                        {item.name}
+                      </option>
+                    ))}
+                    {/* <option value="Pcs">Pcs</option>
                     <option value="Dus">Dus</option>
                     <option value="Lusin">Lusin</option>
-                    <option value="Kotak">Kotak</option>
+                    <option value="Kotak">Kotak</option> */}
                   </Select>
                 </div>
                 <div>
@@ -334,7 +463,7 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
                     type="number"
                     placeholder="Atur Stok"
                     required
-                    {...registerModal("stok")}
+                    // {...registerModal("stok")}
                   />
                 </div>
                 <div>
@@ -345,7 +474,7 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
                     type="number"
                     placeholder="Harga Produk"
                     required
-                    {...registerModal("harga")}
+                    // {...registerModal("harga")}
                   />
                 </div>
                 <button
@@ -377,7 +506,7 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
               </div>
               <form
                 className="flex flex-col gap-5"
-                onSubmit={handleSubmitUpdateModal(onSubmitUpdateModal)}
+                // onSubmit={handleSubmitUpdateModal(onSubmitUpdateModal)}
               >
                 <div className="flex gap-x-5">
                   <p className="bg-[#F7D9CF] p-3 w-1/3 rounded-lg text-[#FF6B35]">
@@ -388,10 +517,10 @@ const DetailProduk: NextPage<Props> = ({ dirs }) => {
                     className="border-2 w-1/3 rounded-lg border-[#94A3B8]"
                     placeholder="Atur Stok"
                     defaultValue={stock}
-                    {...registerUpdateModal("stok", {
-                      required: true,
-                      valueAsNumber: true,
-                    })}
+                    // {...registerUpdateModal("stok", {
+                    //   required: true,
+                    //   valueAsNumber: true,
+                    // })}
                   />
                 </div>
                 <button

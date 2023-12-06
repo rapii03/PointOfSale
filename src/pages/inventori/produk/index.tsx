@@ -10,6 +10,8 @@ import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { SWRResponse, mutate } from "swr";
 import useSWR from "swr";
+import { setContext, useAppContext } from "@/hooks/useContext";
+import { useEffect } from "react";
 
 
 // interface IDataForm {
@@ -35,14 +37,18 @@ import useSWR from "swr";
 // }
 
 export default function Product() {
+
+  const router = useRouter();
+  const myContext = useAppContext();
+
+  useEffect(() => {
+    console.log(myContext);
+  })
   
   const axiosPrivate = useAxiosPrivate();
   const [accessToken, _] = useLocalStorage("accessToken", "");
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [kategori, setKategori] = useState("");
-  const [updateId, setUpdateId] = useState("");
-  const [initName, setInitName] = useState("");
 
   interface Categories {
     id : string;
@@ -92,6 +98,11 @@ export default function Product() {
   const onPageChange = (page: number) => setCurrentPage(page);
 
   const columns = ["No", "Nama Produk", "Kategori", "Aksi"];
+
+  const handleDetail = (id: string) => {
+    router.push(`/inventori/produk/detail-produk`);
+    setContext(id);
+  }
 
   const crumbs = [
     { text: "Home", href: "/dashboard-admin" },
@@ -169,7 +180,7 @@ export default function Product() {
             </tr>
           </thead>
           <tbody>
-            {dataProduk?.items?.map((col, colIndex, id) => (
+            {dataProduk?.items?.map((col, colIndex) => (
               <tr>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
@@ -183,9 +194,8 @@ export default function Product() {
                 </td>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-start items-center gap-x-5 h-12 border-b">
-                    {col.categories.map((item, index) => (
+                    {col.categories.map((item) => (
                       <p
-                        key={index}
                         className="text-white text-md bg-[#FF6B35] h-6 p-2 rounded-md flex justify-center items-center"
                       >
                         {item.name}
@@ -204,6 +214,9 @@ export default function Product() {
                     >
                       Detail
                     </Link>
+                    {/* <button className="text-md text-blue-700" onClick={()=>handleDetail(col.id as string)}>
+                    Detail
+                    </button> */}
                     {/* <Link
                       href="/inventori/produk/detail-produk"
                       className="text-md text-blue-700"
