@@ -5,93 +5,48 @@ import Searchbar from "@/components/Searchbar";
 import React, { useState } from "react";
 import { Pagination } from "flowbite-react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import useLocalStorage from "@/hooks/useLocalStorage";
-import { SWRResponse, mutate } from "swr";
-import useSWR from "swr";
 
+interface IDataForm {
+  nama: string;
+  kategori: string;
+  tanggal: string;
+  gambar: string;
+  satuan: string;
+  stok: number;
+  harga: number;
+}
 
-// interface IDataForm {
-//   nama: string;
-//   kategori: string;
-//   tanggal: string;
-//   gambar: string;
-//   satuan: string;
-//   stok: number;
-//   harga: number;
-// }
+interface ITableData {
+  value: any;
+  type: string;
+}
 
-// interface ITableData {
-//   value: any;
-//   type: string;
-// }
-
-// interface ITableDatas {
-//   No: ITableData[];
-//   Nama: ITableData[];
-//   Kategori: ITableData[];
-//   Aksi: ITableData[];
-// }
+interface ITableDatas {
+  No: ITableData[];
+  Nama: ITableData[];
+  Kategori: ITableData[];
+  Aksi: ITableData[];
+}
 
 export default function Product() {
-  
-  const axiosPrivate = useAxiosPrivate();
-  const [accessToken, _] = useLocalStorage("accessToken", "");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [kategori, setKategori] = useState("");
-  const [updateId, setUpdateId] = useState("");
-  const [initName, setInitName] = useState("");
-
-  interface Categories {
-    id : string;
-    name : string;
-  }
-  
-  interface Data {
-    id?: string;
-    name: string;
-    image: string;
-    categories : Categories[];
-  }
-
-  interface Produk{
-    items : Data[];
-    meta : any;
-  }
-
-  const {
-    data: dataProduk,
-    error,
-    isLoading,
-  }: SWRResponse<Produk, any, boolean> = useSWR(
-    `/product/group/all?page=${currentPage}&search=${search}`,
-    (url) =>
-      axiosPrivate
-        .get(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        })
-        .then((res) => res.data?.data)
-  );
-  // interface Produk {
-  //   id?: number;
-  //   nama: string;
-  //   kategori: string[];
-  // }
-  //Format Data Buat Produk
-  // const dataProduk: Produk[] = [
-  //   { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
-  //   { id: 2, nama: "Indomie", kategori: ["Makanan", "Mie"] },
-  //   { id: 3, nama: "Indomie", kategori: ["Makanan", "Mie"] },
-  //   { id: 4, nama: "Indomie", kategori: ["Makanan", "Mie"] },
-  // ];
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   const onPageChange = (page: number) => setCurrentPage(page);
 
   const columns = ["No", "Nama Produk", "Kategori", "Aksi"];
+
+  interface Produk {
+    id?: number;
+    nama: string;
+    kategori: string[];
+  }
+  //Format Data Buat Produk
+  const dataProduk: Produk[] = [
+    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+    { id: 1, nama: "Indomie", kategori: ["Makanan", "Mie"] },
+  ];
 
   const crumbs = [
     { text: "Home", href: "/dashboard-admin" },
@@ -118,7 +73,6 @@ export default function Product() {
       },
     },
   };
-
   return (
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
@@ -169,7 +123,7 @@ export default function Product() {
             </tr>
           </thead>
           <tbody>
-            {dataProduk?.items?.map((col, colIndex, id) => (
+            {dataProduk.map((col, colIndex, id) => (
               <tr>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
@@ -178,38 +132,22 @@ export default function Product() {
                 </td>
                 <td className="border-collapse  px-0 text-left">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.name}
+                    {col.nama}
                   </div>
                 </td>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-start items-center gap-x-5 h-12 border-b">
-                    {col.categories.map((item, index) => (
-                      <p
-                        key={index}
-                        className="text-white text-md bg-[#FF6B35] h-6 p-2 rounded-md flex justify-center items-center"
-                      >
-                        {item.name}
-                      </p>
-                    ))}
+                    <p className="text-white text-md bg-[#FF6B35] h-6 p-2 rounded-md flex justify-center items-center">
+                      {col.kategori[0]}
+                    </p>
+                    <p className="text-white text-md bg-[#FF6B35] h-6 p-2 rounded-md flex justify-center items-center">
+                      {col.kategori[1]}
+                    </p>
                   </div>
                 </td>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center gap-x-5 h-12 border-b">
-                    <Link
-                      href={{ 
-                        pathname: "/inventori/produk/detail-produk",
-                        query: { id: col.id },
-                      }}
-                      className="text-md text-blue-700"
-                    >
-                      Detail
-                    </Link>
-                    {/* <Link
-                      href="/inventori/produk/detail-produk"
-                      className="text-md text-blue-700"
-                    >
-                      Detail
-                    </Link> */}
+                    <button className="text-md text-blue-700">Detail</button>
                   </div>
                 </td>
               </tr>
@@ -217,19 +155,18 @@ export default function Product() {
           </tbody>
         </table>
       </div>
+
       <div className="flex overflow-x-auto sm:justify-end">
-      {dataProduk?.meta?.totalPages > 1 && (
-          <Pagination
-            theme={paginationTheme}
-            layout="pagination"
-            currentPage={currentPage}
-            totalPages={dataProduk?.meta?.totalPages}
-            onPageChange={onPageChange}
-            previousLabel=""
-            nextLabel=""
-            showIcons
-          />
-        )}
+        <Pagination
+          theme={paginationTheme}
+          layout="pagination"
+          currentPage={currentPage}
+          totalPages={10}
+          onPageChange={onPageChange}
+          previousLabel=""
+          nextLabel=""
+          showIcons
+        />
       </div>
     </AdminLayout>
   );
