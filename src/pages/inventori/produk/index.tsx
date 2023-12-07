@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import { SWRResponse, mutate } from "swr";
+import { SWRResponse } from "swr";
 import useSWR from "swr";
 import { setContext, useAppContext } from "@/hooks/useContext";
 import { useEffect } from "react";

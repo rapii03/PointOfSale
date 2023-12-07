@@ -149,7 +149,7 @@ export default function Kategori() {
       }
       alert(statusText + " : " + status + "\nPesan : " + msg);
     }
-    mutate(`/product/unit/all?page=${currentPage}&search=${search}`);
+    mutate(`/product/category/all?page=${currentPage}&search=${search}`);
     onCloseDeleteModal();
   };
 

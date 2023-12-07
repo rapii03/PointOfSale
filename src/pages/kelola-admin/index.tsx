@@ -30,7 +30,6 @@ export default function KelolaAdmin() {
 
   const { edgestore } = useEdgeStore();
   const [file, setFile] = useState<File | null>(null);
-  const [path, setPath] = useState("");
   const [updateImg, setUpdateImg] = useState("");
 
   const handleFileUpload = async (file: File) => {
@@ -43,7 +42,7 @@ export default function KelolaAdmin() {
         },
       });
       // console.log(res.url);
-      setPath(res.url);
+      return res.url;
     }
   }
 
@@ -55,7 +54,7 @@ export default function KelolaAdmin() {
           replaceTargetUrl: path,
         },
       });
-      setPath(res.url);
+      return res.url;
       // console.log(res.url);
     }
   }
@@ -164,8 +163,8 @@ export default function KelolaAdmin() {
     useForm<Data>();
   const onSubmit: SubmitHandler<Data> = async (data) => {
     try {
-      await handleFileUpload(file as File);
-      data.image = path;
+      const url = await handleFileUpload(file as File);
+      data.image = url;
       await axiosPrivate.post("/admin/add", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;
@@ -182,8 +181,8 @@ export default function KelolaAdmin() {
   const onSubmitEdit: SubmitHandler<Data> = async (data) => {
     data.id = updateId;
     try {
-      await handleFileReplace(file as File, updateImg);
-      data.image = path;
+      const url = await handleFileReplace(file as File, updateImg);
+      data.image = url;
       await axiosPrivate.put("/admin/update", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;
@@ -202,8 +201,6 @@ export default function KelolaAdmin() {
       data: { id: updateId },
     };
     try {
-      // console.log(updateImg);
-      // await handleFileDelete(updateImg);
       await axiosPrivate.delete("/admin/delete", data);
     } catch (e: any) {
       let statusText: string | undefined = e?.response?.statusText;

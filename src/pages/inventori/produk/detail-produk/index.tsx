@@ -11,31 +11,25 @@ import { SWRResponse, mutate } from "swr";
 import useSWR from "swr";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import { useAppContext } from "@/hooks/useContext";
-// import fs from "fs/promises";
-// import path from "path";
-// import ImageUploader from "@/components/handleUpload";
+import { useEdgeStore } from "@/lib/edgestore";
 
-// interface Props {
-//   dirs: string[];
-// }
-
-interface Price{
-  id: string;
+interface Price {
+  id?: string;
   price: string;
 }
 
-interface Stock{
-  id: string;
+interface Stock {
+  id?: string;
   stock: number;
 }
 
-interface Unit{
+interface Unit {
   id: string;
   name: string;
 }
 
 interface Group {
+  id?: string;
   price?: Price;
   stock?: Stock;
   unit?: Unit;
@@ -55,17 +49,15 @@ interface IDataForm {
   group: Group[];
 }
 
-
 interface ListKategori {
-  data : Kategori[];
+  data: Kategori[];
 }
 
 interface ListUnit {
-  data : Unit[];
+  data: Unit[];
 }
 
 const DetailProduk = () => {
-
   const [dataForm, setDataForm] = useState<IDataForm>({
     id: "",
     name: "",
@@ -73,8 +65,6 @@ const DetailProduk = () => {
     category: [],
     group: [],
   });
-
-  // const myContext = useAppContext();
 
   const axiosPrivate = useAxiosPrivate();
   const [accessToken, _] = useLocalStorage("accessToken", "");
@@ -114,61 +104,91 @@ const DetailProduk = () => {
         .then((res) => res.data)
   );
 
-  console.log(dataKategori);
-  
-
   const {
     data: dataUnit,
     error: errorUnit,
     isLoading: isLoadingUnit,
-  }: SWRResponse<ListUnit, any, boolean> = useSWR(
-    `/product/unit/list`,
-    (url) =>
-      axiosPrivate
-        .get(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        })
-        .then((res) => res.data)
+  }: SWRResponse<ListUnit, any, boolean> = useSWR(`/product/unit/list`, (url) =>
+    axiosPrivate
+      .get(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      .then((res) => res.data)
   );
 
   const router = useRouter();
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if(router.isReady){
-          if(!router.query.id){
+        if (router.isReady) {
+          if (!router.query.id) {
             router.push("/inventori/produk");
           }
           const response = await axiosPrivate.post(
             `/product/group/one`,
             {
-              id: router.query.id
+              id: router.query.id,
             },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
             }
-          }
           );
           setDataForm(response.data.data);
         }
       } catch (error) {
         // Handle errors here
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
-    }
+    };
     fetchData();
-    console.log("ini query : " + router.query.id);
-    console.log("ini dataform : " + dataForm);
-  }, [router.isReady])
-
-
+  }, [router.isReady]);
 
   const [openModal, setOpenModal] = useState(false);
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
+
+  const { edgestore } = useEdgeStore();
+  const [file, setFile] = useState<File | null>(null);
+  const [path, setPath] = useState("");
+  const [updateImg, setUpdateImg] = useState("");
+
+  const handleFileUpload = async (file: File) => {
+    if (file) {
+      const res = await edgestore.publicFiles.upload({
+        file,
+        onProgressChange: (progress) => {
+          // you can use this to show a progress bar
+          console.log(progress);
+        },
+      });
+      // console.log(res.url);
+      setPath(res.url);
+    }
+  };
+
+  const handleFileReplace = async (file: File, path: string) => {
+    if (file) {
+      const res = await edgestore.publicFiles.upload({
+        file,
+        options: {
+          replaceTargetUrl: path,
+        },
+      });
+      setPath(res.url);
+      // console.log(res.url);
+    }
+  };
+
+  const handleFileDelete = async (path: string) => {
+    await edgestore.publicFiles.delete({
+      url: path,
+    });
+  };
+
 
   function onCloseModal() {
     setOpenModal(false);
@@ -198,7 +218,8 @@ const DetailProduk = () => {
 
   const [stock, setStock] = useState<any>(0);
   const { register, handleSubmit } = useForm<IDataForm>();
-  // const { register: registerModal, handleSubmit: handleSubmitDataModal } = useForm<IModalData>();
+  const { register: registerModal, handleSubmit: handleSubmitDataModal } =
+    useForm<Group>();
   // const {
   //   register: registerUpdateModal,
   //   handleSubmit: handleSubmitUpdateModal,
@@ -207,15 +228,22 @@ const DetailProduk = () => {
 
   const onSubmit: SubmitHandler<IDataForm> = (data) => {
     console.log(dataKategori);
-    
   };
 
-  // const onSubmitModal: SubmitHandler<IModalData> = (data) => {
-  //   // handleSubmitModal(data, dataForm);
-  //   // setDataForm({ ...dataForm, modal: [...dataForm.modal, data] });
-  //   // onCloseModal();
-  //   // reset({ stok: "", harga: "" });
-  // };
+  const onSubmitModal: SubmitHandler<Group> = (data) => {
+    // handleSubmitModal(data, dataForm);
+    console.log(data.unit?.name)
+    const newData : Group = {
+      unit : {
+        id : "12312331",
+        name : data.unit?.name as string
+      }
+    } 
+    setDataForm({ ...dataForm, group: [...dataForm.group, data] });
+    // console.log(dataForm);
+    onCloseModal();
+    // reset({ stok: "", harga: "" });
+  };
 
   // const onSubmitUpdateModal: SubmitHandler<IModalData> = (data) => {
   //   setDataForm({
@@ -248,24 +276,6 @@ const DetailProduk = () => {
   useEffect(() => {
     console.log(dataForm, "useEffect");
   }, [dataForm]);
-
-  const [uploading, setUploading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File>();
-
-  const handleUpload = async () => {
-    setUploading(true);
-    try {
-      if (!selectedFile) return;
-      const formData = new FormData();
-      formData.append("myImage", selectedFile);
-      const { data } = await axios.post("/api/image", formData);
-      console.log(data);
-    } catch (error: any) {
-      console.log(error.response?.data);
-    }
-    setUploading(false);
-  };
 
   const saveData = () => {
     // alert("Data Tersimpan");
@@ -311,9 +321,7 @@ const DetailProduk = () => {
                 // {...register("kategori", { required: true })}
               >
                 {dataKategori?.data?.map((categorie) => (
-                  <option value={categorie.name}>
-                    {categorie.name}
-                  </option>
+                  <option value={categorie.name}>{categorie.name}</option>
                 ))}
                 {/* <option value="">Pilih Kategori</option>
                 <option value="Makanan">Makanan</option>
@@ -340,6 +348,25 @@ const DetailProduk = () => {
               <label className="block text-sm font-medium text-gray-900 dark:text-white">
                 Gambar Produk
               </label>
+              <div className="p-2 ps-0 flex items-center gap-3">
+                <label
+                  htmlFor="file-upload"
+                  className="bg-[#FF6B35] text-white rounded-md p-2 px-4 text-md "
+                >
+                  <input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => {
+                      setFile(e.target.files?.[0] ?? null);
+                    }}
+                  />
+                  Unggah
+                </label>
+                <p className="text-md text-[#B7B7B7]">
+                  {file === null ? "Unggah Gambar" : file?.name}
+                </p>
+              </div>
               {/* <ImageUploader dirs={dirs} /> */}
             </div>
           </div>
@@ -434,7 +461,7 @@ const DetailProduk = () => {
             <div className="space-y-6">
               <form
                 className="flex flex-col gap-y-5"
-                // onSubmit={handleSubmitDataModal(onSubmitModal)}
+                onSubmit={handleSubmitDataModal(onSubmitModal)}
               >
                 <div>
                   <div className="mb-2 block">
@@ -444,12 +471,10 @@ const DetailProduk = () => {
                     id="satuan"
                     required
                     className="w-fit"
-                    // {...registerModal("satuan")}
+                    {...registerModal("unit.name")}
                   >
                     {dataUnit?.data?.map((item) => (
-                      <option value={item.name}>
-                        {item.name}
-                      </option>
+                      <option value={item.name}>{item.name}</option>
                     ))}
                     {/* <option value="Pcs">Pcs</option>
                     <option value="Dus">Dus</option>
@@ -466,7 +491,7 @@ const DetailProduk = () => {
                     type="number"
                     placeholder="Atur Stok"
                     required
-                    // {...registerModal("stok")}
+                    {...registerModal("stock")}
                   />
                 </div>
                 <div>
@@ -477,7 +502,7 @@ const DetailProduk = () => {
                     type="number"
                     placeholder="Harga Produk"
                     required
-                    // {...registerModal("harga")}
+                    {...registerModal("price")}
                   />
                 </div>
                 <button
