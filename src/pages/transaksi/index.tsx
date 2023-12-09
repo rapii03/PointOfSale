@@ -5,7 +5,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { Pagination } from "flowbite-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 
 export default function Transaksi() {
   const paginationTheme = {
@@ -99,22 +99,33 @@ export default function Transaksi() {
   const [currentPage, setCurrentPage] = useState(1);
   const onPageChange = (page: number) => setCurrentPage(page);
 
-  const [startDate, setStartDate] = useState();
-  const [endDate, setEndtDate] = useState();
+  const { control, handleSubmit, setValue, watch } = useForm();
+  const minDate = watch("startDate");
+  const startDateValue = watch("startDate");
+  const endDateValue = watch("endDate");
 
-  const { register, handleSubmit, unregister, reset } = useForm();
-  const onSubmit = (data: any) => {
-    if (data.tanggal <= data.tanggal1) {
-      const date1 = new Date(data.tanggal);
-      const date2 = new Date(data.tanggal1);
-
-      console.log("start date: " + date1);
-      console.log("end date: " + date2);
-      alert("Data Masuk");
-    } else {
-      console.log("error");
-    }
+  const handleStartDateChange = (value: any) => {
+    setValue("startDate", value);
   };
+
+  const handleEndDateChange = (value: any) => {
+    setValue("endDate", value);
+  };
+
+  const onSubmit = (data: any) => {
+    // Menyimpan data atau melakukan tindakan lainnya
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+    console.log("Start Date :", startDate);
+    console.log("End Date :", endDate);
+  };
+
+  // Memonitor perubahan nilai input dan memicu onSubmit
+  useEffect(() => {
+    if (startDateValue && endDateValue) {
+      handleSubmit(onSubmit)();
+    }
+  }, [startDateValue, endDateValue, handleSubmit, onSubmit]);
 
   return (
     <AdminLayout>
@@ -122,24 +133,45 @@ export default function Transaksi() {
       <div className="flex h-fit justify-between items-center mb-6">
         <div className="flex  text-sm">
           <form
-            onChange={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit)}
             className="flex flex-nowrap justify-between items-center gap-x-3 text-sm"
           >
             <div>
-              <input
-                type="date"
-                {...register("tanggal")}
-                className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 red-500"
+              <Controller
+                name="startDate"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <input
+                    className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 red-500"
+                    type="date"
+                    {...field}
+                    onChange={(e) => {
+                      handleStartDateChange(e.target.value);
+                    }}
+                  />
+                )}
               />
             </div>
 
             <p>to</p>
 
             <div>
-              <input
-                type="date"
-                {...register("tanggal1")}
-                className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
+              <Controller
+                name="endDate"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <input
+                    type="date"
+                    {...field}
+                    min={minDate} // Set batas minimum
+                    onChange={(e) => {
+                      handleEndDateChange(e.target.value);
+                    }}
+                    className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
+                  />
+                )}
               />
             </div>
           </form>
@@ -238,7 +270,7 @@ export default function Transaksi() {
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                       <button className="text-[#FF6B35] text-md">Print</button>
                       <Link
-                        href="/transaksi/detail-transaksi"
+                        href={`/transaksi/detail-transaksi-${col.id}`}
                         className="text-blue-700 text-md"
                       >
                         Detail
@@ -250,7 +282,7 @@ export default function Transaksi() {
                   <td className="border-collapse p2 px-0 text-center">
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                       <Link
-                        href="/transaksi/pending-detail-transaksi"
+                        href={`/transaksi/pending-detail-transaksi-${col.id}`}
                         className="text-blue-700 text-md"
                       >
                         Detail

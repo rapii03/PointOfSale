@@ -312,10 +312,10 @@ const DetailProduk = () => {
                     {categorie.name}
                   </option>
                 ))}
-                {/* <option value="">Pilih Kategori</option>
+                 {/* <option value="">Pilih Kategori</option>
                 <option value="Makanan">Makanan</option>
                 <option value="Minuman">Minuman</option>
-                <option value="Cemilan">Cemilan</option> */}
+                <option value="Cemilan">Cemilan</option>  */}
               </select>
             </div>
           </div>
