@@ -1,8 +1,9 @@
 /* eslint-disable react/jsx-key */
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { useState, useEffect } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useState, useEffect, useRef } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useReactToPrint } from "react-to-print";
 import moment from "moment";
 
 export default function Laporan() {
@@ -11,21 +12,33 @@ export default function Laporan() {
     { text: "Transaksi" },
   ];
 
-  const { register, handleSubmit, getValues } = useForm();
+  const { control, handleSubmit, setValue, watch } = useForm();
+  const minDate = watch("startDate");
+  const startDateValue = watch("startDate");
+  const endDateValue = watch("endDate");
+
+  const handleStartDateChange = (value: any) => {
+    setValue("startDate", value);
+  };
+
+  const handleEndDateChange = (value: any) => {
+    setValue("endDate", value);
+  };
 
   const onSubmit = (data: any) => {
-    if (data.tanggal <= data.tanggal1) {
-      const date1 = new Date(data.tanggal);
-      const date2 = new Date(data.tanggal1);
-
-      console.log("start date: " + date1);
-      console.log("end date: " + date2);
-
-      alert("Data Masuk");
-    } else {
-      console.log("error");
-    }
+    // Menyimpan data atau melakukan tindakan lainnya
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+    console.log("Start Date :", startDate);
+    console.log("End Date :", endDate);
   };
+
+  // Memonitor perubahan nilai input dan memicu onSubmit
+  useEffect(() => {
+    if (startDateValue && endDateValue) {
+      handleSubmit(onSubmit)();
+    }
+  }, [startDateValue, endDateValue, handleSubmit, onSubmit]);
 
   function formattedDate(data1: any, data2: any) {
     const formattedStartDate = moment(data1).format("D MMMM YYYY");
@@ -34,13 +47,10 @@ export default function Laporan() {
     return { formattedStartDate, formattedEndDate };
   }
 
-  const dateA = new Date("18 November 2023");
-  const dateB = new Date("10 December 2023");
+  const ubahTanggal = formattedDate(startDateValue, endDateValue);
 
-  const ubahTanggal = formattedDate(dateA, dateB);
-
-  const startDate = ubahTanggal.formattedStartDate;
-  const endDate = ubahTanggal.formattedEndDate;
+  const awal = ubahTanggal.formattedStartDate;
+  const akhir = ubahTanggal.formattedEndDate;
 
   // const dateA = new Date("25 November 2023");
   // const startDate = moment(dateA).format("D MMMM YYYY");
@@ -67,6 +77,13 @@ export default function Laporan() {
   const rataJumlahPendapatanInvoice: any = "230.000";
   const jumlahProdukTerjual: number = 145;
 
+  // function print laporan
+  const componentRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
   return (
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
@@ -74,30 +91,54 @@ export default function Laporan() {
         <div className="flex justify-between items-center gap-x-3 text-sm">
           <div className="flex  text-sm">
             <form
-              onChange={handleSubmit(onSubmit)}
+              onSubmit={handleSubmit(onSubmit)}
               className="flex flex-nowrap justify-between items-center gap-x-3 text-sm"
             >
               <div>
-                <input
-                  type="date"
-                  {...register("tanggal")}
-                  className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 red-500"
+                <Controller
+                  name="startDate"
+                  control={control}
+                  defaultValue=""
+                  render={({ field }) => (
+                    <input
+                      className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5 red-500"
+                      type="date"
+                      {...field}
+                      onChange={(e) => {
+                        handleStartDateChange(e.target.value);
+                      }}
+                    />
+                  )}
                 />
               </div>
 
               <p>to</p>
 
               <div>
-                <input
-                  type="date"
-                  {...register("tanggal1")}
-                  className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
+                <Controller
+                  name="endDate"
+                  control={control}
+                  defaultValue=""
+                  render={({ field }) => (
+                    <input
+                      type="date"
+                      {...field}
+                      min={minDate} // Set batas minimum
+                      onChange={(e) => {
+                        handleEndDateChange(e.target.value);
+                      }}
+                      className="bg-gray-50 border border-[#FF6B35] text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
+                    />
+                  )}
                 />
               </div>
             </form>
           </div>
         </div>
-        <button className="w-auto h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-4 text-sm">
+        <button
+          className="w-auto h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-4 text-sm"
+          onClick={handlePrint}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="21"
@@ -125,12 +166,16 @@ export default function Laporan() {
           <p className="text-white">Print </p>
         </button>
       </div>
-      <div className="my-2 flex flex-col h-auto items-center py-[37px] px-[55px]     shadow-sm">
+
+      <div
+        className="my-2 flex flex-col h-auto items-center py-[37px] px-[55px]     shadow-sm"
+        ref={componentRef}
+      >
         <div className=" w-full flex flex-col gap-y-[2.313rem]">
           <div className="flex flex-col  items-center gap-[14px] py-4">
             <h1 className="text-2xl font-semibold">Laporan Keuangan</h1>
             <p className="text-sm">
-              Periode {startDate} - {endDate}
+              Periode {awal} - {akhir}
             </p>
           </div>
           <div className="">
