@@ -211,7 +211,7 @@ export default function KelolaAdmin() {
       }
       alert(statusText + " : " + status + "\nPesan : " + msg);
     }
-    mutate(`/cashier/all?page=${currentPage}&search=${search}`);
+    mutate(`/admin/all?page=${currentPage}&search=${search}`);
     onCloseDeleteModal();
   };
 
@@ -272,7 +272,7 @@ export default function KelolaAdmin() {
               <tr>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
-                    {colIndex + 1}
+                    {dataAdmin?.meta?.itemsPerPage * (currentPage - 1) + colIndex + 1}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">

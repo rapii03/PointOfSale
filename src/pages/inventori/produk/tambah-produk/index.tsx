@@ -163,16 +163,11 @@ export default function FormTambahProdukAdminPage() {
     if (data.expired_at) {
       dataForm.expired_at = new Date(data.expired_at).toISOString();
     }
-    try{
-      await axiosPrivate.post("/product/group/add", dataForm);
-    }catch(err){
-      alert(err);
-    }
+    await axiosPrivate.post("/product/group/add", dataForm);
     router.push("/inventori/produk");
   };
 
   const onSubmitModal: SubmitHandler<Group> = (data) => {
-    // handleSubmitModal(data, dataForm);
     setDataForm({ ...dataForm, group: [...dataForm.group, data] });
     onCloseModal();
     resetFieldModal("stock");

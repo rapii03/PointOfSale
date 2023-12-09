@@ -130,6 +130,8 @@ export default function Product() {
     },
   };
 
+  console.log(dataProduk);
+
   return (
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
@@ -184,7 +186,7 @@ export default function Product() {
               <tr>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
-                    {colIndex + 1}
+                    {dataProduk?.meta?.itemsPerPage * (currentPage - 1) + colIndex + 1}
                   </div>
                 </td>
                 <td className="border-collapse  px-0 text-left">
