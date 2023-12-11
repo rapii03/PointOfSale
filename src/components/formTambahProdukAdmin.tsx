@@ -92,12 +92,22 @@ export default function FormTambahProdukAdmin() {
     console.log(dataForm, "useEffect");
   }, [dataForm]);
 
-  const pilihan = [
-    { value: "makanan", label: "Makanan" },
-    { value: "minuman", label: "Minuman" },
-    { value: "barang", label: "Barang" },
-    { value: "kelistrikan", label: "Kelistrikan" },
+  const kategori = [
+    { id: "makanan", name: "Makanan" },
+    { id: "minuman", name: "Minuman" },
+    { id: "barang", name: "Barang" },
+    { id: "kelistrikan", name: "Kelistrikan" },
   ];
+  
+  let pilihan = [];
+
+  kategori.map((item)=>{
+    pilihan.push({
+      value: item.id,
+      label: item.name
+    })
+  })
+
 
   const handleChange = (selectedOption: any) => {
     console.log("handleChange", selectedOption);

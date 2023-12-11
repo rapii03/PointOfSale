@@ -1,171 +1,42 @@
 /* eslint-disable react/jsx-key */
+import React from "react";
 import { useEffect, useState } from "react";
 import { Label, Modal, TextInput, Select } from "flowbite-react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { GetServerSideProps, NextPage } from "next";
-import axios from "axios";
-import { useRouter } from "next/router";
-import { SWRResponse, mutate } from "swr";
-import useSWR from "swr";
-import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import useLocalStorage from "@/hooks/useLocalStorage";
-import { useAppContext } from "@/hooks/useContext";
-// import fs from "fs/promises";
-// import path from "path";
-// import ImageUploader from "@/components/handleUpload";
+import CustomSelect from "@/components/multipleSelect";
 
-// interface Props {
-//   dirs: string[];
-// }
-
-interface Price{
-  id: string;
-  price: string;
-}
-
-interface Stock{
-  id: string;
-  stock: number;
-}
-
-interface Unit{
-  id: string;
-  name: string;
-}
-
-interface Group {
-  price?: Price;
-  stock?: Stock;
-  unit?: Unit;
-}
-
-interface Kategori {
-  id: string;
-  name: string;
+interface Props {
+  dirs: string[];
 }
 
 interface IDataForm {
-  id?: string;
-  name?: string;
-  image?: string;
+  nama?: string;
+  kategori?: string;
   tanggal?: boolean;
-  category?: Kategori[];
-  group: Group[];
+  gambar?: string;
+  modal: IModalData[];
 }
 
-
-interface ListKategori {
-  data : Kategori[];
-}
-
-interface ListUnit {
-  data : Unit[];
+interface IModalData {
+  satuan?: string;
+  stok?: number;
+  stok1?: number;
+  harga?: number;
+  opsi?: string;
 }
 
 const DetailProduk = () => {
-
-  const [dataForm, setDataForm] = useState<IDataForm>({
-    id: "",
-    name: "",
-    image: "",
-    category: [],
-    group: [],
-  });
-
-  // const myContext = useAppContext();
-
-  const axiosPrivate = useAxiosPrivate();
-  const [accessToken, _] = useLocalStorage("accessToken", "");
-
-  // const {
-  //   data: dataProduk,
-  //   error: errorProduk,
-  //   isLoading: isLoadingProduk,
-  // }: SWRResponse<ListKategori, any, boolean> = useSWR(
-  //   `/product/group/one`,
-  //   (url) =>
-  //     axiosPrivate
-  //       .post(url, {
-  //         headers: {
-  //           Authorization: `Bearer ${accessToken}`,
-  //         },
-  //         body: {
-  //           id: targetId
-  //         }
-  //       })
-  //       .then((res) => res.data)
-  // );
-
-  const {
-    data: dataKategori,
-    error,
-    isLoading,
-  }: SWRResponse<ListKategori, any, boolean> = useSWR(
-    `/product/category/list`,
-    (url) =>
-      axiosPrivate
-        .get(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        })
-        .then((res) => res.data)
-  );
-
-  const {
-    data: dataUnit,
-    error: errorUnit,
-    isLoading: isLoadingUnit,
-  }: SWRResponse<ListUnit, any, boolean> = useSWR(
-    `/product/unit/list`,
-    (url) =>
-      axiosPrivate
-        .get(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        })
-        .then((res) => res.data)
-  );
-
-  const router = useRouter();
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if(router.isReady){
-          if(!router.query.id){
-            router.push("/inventori/produk");
-          }
-          const response = await axiosPrivate.post(
-            `/product/group/one`,
-            {
-              id: router.query.id
-            },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          }
-          );
-          setDataForm(response.data.data);
-        }
-      } catch (error) {
-        // Handle errors here
-        console.error('Error fetching data:', error);
-      }
-    }
-    fetchData();
-    console.log("ini query : " + router.query.id);
-    console.log("ini dataform : " + dataForm);
-  }, [router.isReady])
-
-
-
   const [openModal, setOpenModal] = useState(false);
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
+  const [dataForm, setDataForm] = useState<IDataForm>({
+    nama: "",
+    kategori: "",
+    tanggal: true,
+    gambar: "",
+    modal: [],
+  });
 
   function onCloseModal() {
     setOpenModal(false);
@@ -184,7 +55,8 @@ const DetailProduk = () => {
   const handleOpenUpdateModal = (num: number) => {
     console.log(num);
     console.log(dataForm);
-    // setStock(dataForm.modal[num].stok);
+
+    setStock(dataForm.modal[num].stok);
     setTargetUpdate(num);
     setOpenUpdateModal(true);
   };
@@ -195,42 +67,46 @@ const DetailProduk = () => {
 
   const [stock, setStock] = useState<any>(0);
   const { register, handleSubmit } = useForm<IDataForm>();
-  // const { register: registerModal, handleSubmit: handleSubmitDataModal } = useForm<IModalData>();
-  // const {
-  //   register: registerUpdateModal,
-  //   handleSubmit: handleSubmitUpdateModal,
-  //   resetField,
-  // } = useForm<IModalData>();
+  const {
+    register: registerModal,
+    handleSubmit: handleSubmitDataModal,
+    getValues,
+  } = useForm<IModalData>();
+
+  const {
+    register: registerUpdateModal,
+    handleSubmit: handleSubmitUpdateModal,
+    resetField,
+  } = useForm<IModalData>();
 
   const onSubmit: SubmitHandler<IDataForm> = (data) => {
-    console.log(dataKategori);
-    
+    console.log(data);
   };
 
-  // const onSubmitModal: SubmitHandler<IModalData> = (data) => {
-  //   // handleSubmitModal(data, dataForm);
-  //   // setDataForm({ ...dataForm, modal: [...dataForm.modal, data] });
-  //   // onCloseModal();
-  //   // reset({ stok: "", harga: "" });
-  // };
+  const onSubmitModal: SubmitHandler<IModalData> = (data) => {
+    // handleSubmitModal(data, dataForm);
+    setDataForm({ ...dataForm, modal: [...dataForm.modal, data] });
+    onCloseModal();
+    // reset({ stok: "", harga: "" });
+  };
 
-  // const onSubmitUpdateModal: SubmitHandler<IModalData> = (data) => {
-  //   setDataForm({
-  //     ...dataForm,
-  //     modal: dataForm.modal.map((item, index) => {
-  //       if (index === targetUpdate) {
-  //         return {
-  //           ...item,
-  //           ...data,
-  //         };
-  //       }
-  //       return item;
-  //     }),
-  //   });
+  const onSubmitUpdateModal: SubmitHandler<IModalData> = (data) => {
+    setDataForm({
+      ...dataForm,
+      modal: dataForm.modal.map((item, index) => {
+        if (index === targetUpdate) {
+          return {
+            ...item,
+            ...data,
+          };
+        }
+        return item;
+      }),
+    });
 
-  //   resetField("stok");
-  //   setOpenUpdateModal(false);
-  // };
+    resetField("stok");
+    setOpenUpdateModal(false);
+  };
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   function onCloseDeleteModal() {
@@ -250,25 +126,43 @@ const DetailProduk = () => {
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File>();
 
-  const handleUpload = async () => {
-    setUploading(true);
-    try {
-      if (!selectedFile) return;
-      const formData = new FormData();
-      formData.append("myImage", selectedFile);
-      const { data } = await axios.post("/api/image", formData);
-      console.log(data);
-    } catch (error: any) {
-      console.log(error.response?.data);
-    }
-    setUploading(false);
-  };
+  //   const handleUpload = async () => {
+  //     setUploading(true);
+  //     try {
+  //       if (!selectedFile) return;
+  //       const formData = new FormData();
+  //       formData.append("myImage", selectedFile);
+  //       const { data } = await axios.post("/api/image", formData);
+  //       console.log(data);
+  //     } catch (error: any) {
+  //       console.log(error.response?.data);
+  //     }
+  //     setUploading(false);
+  //   };
 
   const saveData = () => {
-    // alert("Data Tersimpan");
-    // console.log(dataKategori?.data);
+    alert("Data Tersimpan");
   };
 
+  const kategori = [
+    { id: "makanan", name: "Makanan" },
+    { id: "minuman", name: "Minuman" },
+    { id: "barang", name: "Barang" },
+    { id: "kelistrikan", name: "Kelistrikan" },
+  ];
+
+  let pilihan = [];
+
+  kategori.map((item) => {
+    pilihan.push({
+      value: item.id,
+      label: item.name,
+    });
+  });
+
+  const handleChange = (selectedOption: any) => {
+    console.log("handleChange", selectedOption);
+  };
   return (
     <AdminLayout>
       <div className="flex justify-between items-center">
@@ -295,28 +189,20 @@ const DetailProduk = () => {
                 type="text"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                 placeholder="Nama Produk"
-                // {...register("nama", { required: true })}
+                {...register("nama", { required: true })}
               ></input>
             </div>
             <div className="w-1/2">
               <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Kategori
               </label>
-              <select
-                id="countries"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
-                // {...register("kategori", { required: true })}
-              >
-                {dataKategori?.data?.map((categorie) => (
-                  <option value={categorie.name}>
-                    {categorie.name}
-                  </option>
-                ))}
-                 {/* <option value="">Pilih Kategori</option>
-                <option value="Makanan">Makanan</option>
-                <option value="Minuman">Minuman</option>
-                <option value="Cemilan">Cemilan</option>  */}
-              </select>
+              <CustomSelect
+                options={pilihan}
+                onChange={handleChange}
+                isMulti
+                isClearable
+                placeholder="Pilih Kategori"
+              />
             </div>
           </div>
           <div className="flex w-full gap-5">
@@ -367,7 +253,7 @@ const DetailProduk = () => {
                 </tr>
               </thead>
               <tbody>
-                {dataForm?.group?.map((col, colIndex) => (
+                {dataForm.modal.map((col, colIndex) => (
                   <tr>
                     <td className="border-collapse  px-0 text-center">
                       <div className="flex justify-center items-center   h-12 border-b">
@@ -376,17 +262,17 @@ const DetailProduk = () => {
                     </td>
                     <td className="border-collapse  px-0 text-center">
                       <div className="flex justify-start items-center   h-12 border-b">
-                        {col.unit?.name}
+                        {col.satuan}
                       </div>
                     </td>
                     <td className="border-collapse  px-0 text-center">
                       <div className="flex justify-start items-center   h-12 border-b">
-                        {col.stock?.stock}
+                        {col.stok}
                       </div>
                     </td>
                     <td className="border-collapse  px-0 text-center">
                       <div className="flex justify-start items-center   h-12 border-b">
-                        Rp. {col.price?.price}
+                        Rp. {col.harga}
                       </div>
                     </td>
                     <td className="border-collapse  px-0 text-center">
@@ -431,7 +317,7 @@ const DetailProduk = () => {
             <div className="space-y-6">
               <form
                 className="flex flex-col gap-y-5"
-                // onSubmit={handleSubmitDataModal(onSubmitModal)}
+                onSubmit={handleSubmitDataModal(onSubmitModal)}
               >
                 <div>
                   <div className="mb-2 block">
@@ -441,17 +327,12 @@ const DetailProduk = () => {
                     id="satuan"
                     required
                     className="w-fit"
-                    // {...registerModal("satuan")}
+                    {...registerModal("satuan")}
                   >
-                    {dataUnit?.data?.map((item) => (
-                      <option value={item.name}>
-                        {item.name}
-                      </option>
-                    ))}
-                    {/* <option value="Pcs">Pcs</option>
+                    <option value="Pcs">Pcs</option>
                     <option value="Dus">Dus</option>
                     <option value="Lusin">Lusin</option>
-                    <option value="Kotak">Kotak</option> */}
+                    <option value="Kotak">Kotak</option>
                   </Select>
                 </div>
                 <div>
@@ -463,7 +344,7 @@ const DetailProduk = () => {
                     type="number"
                     placeholder="Atur Stok"
                     required
-                    // {...registerModal("stok")}
+                    {...registerModal("stok")}
                   />
                 </div>
                 <div>
@@ -474,7 +355,7 @@ const DetailProduk = () => {
                     type="number"
                     placeholder="Harga Produk"
                     required
-                    // {...registerModal("harga")}
+                    {...registerModal("harga")}
                   />
                 </div>
                 <button
@@ -496,7 +377,7 @@ const DetailProduk = () => {
         >
           <Modal.Body className="p-4 border-2 rounded-lg border-[#FF6B35]">
             <div className="space-y-6">
-              <div className="flex gap-x-5">
+              <div className="flex gap-x-3">
                 <p className="bg-[#F7D9CF] p-3 w-fit rounded-lg text-[#FF6B35]">
                   Stock Awal
                 </p>
@@ -506,29 +387,38 @@ const DetailProduk = () => {
               </div>
               <form
                 className="flex flex-col gap-5"
-                // onSubmit={handleSubmitUpdateModal(onSubmitUpdateModal)}
+                onSubmit={handleSubmitUpdateModal(onSubmitUpdateModal)}
               >
-                <div className="flex gap-x-5">
-                  <p className="bg-[#F7D9CF] p-3 w-1/3 rounded-lg text-[#FF6B35]">
+                <div className="flex gap-x-3">
+                  {/* <p className="bg-[#F7D9CF] p-3 w-1/3 rounded-lg text-[#FF6B35]">
                     Stock Akhir
-                  </p>
+                  </p> */}
+                  <select
+                    id="countries"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-50 p-2.5"
+                    {...registerUpdateModal("opsi", { required: true })}
+                  >
+                    <option value="">Tambah/Kurang</option>
+                    <option value="tambah">Tambah</option>
+                    <option value="kurang">Kurang</option>
+                  </select>
                   <input
                     type="number"
                     className="border-2 w-1/3 rounded-lg border-[#94A3B8]"
                     placeholder="Atur Stok"
                     defaultValue={stock}
-                    // {...registerUpdateModal("stok", {
-                    //   required: true,
-                    //   valueAsNumber: true,
-                    // })}
+                    {...registerUpdateModal("stok", {
+                      required: true,
+                      valueAsNumber: true,
+                    })}
                   />
+                  <button
+                    type="submit"
+                    className="w-[88px] bg-[#FF6B35] text-white py-[8px] px-[12px] rounded-md"
+                  >
+                    Simpan
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  className="w-full bg-[#FF6B35] text-white p-2 rounded-md"
-                >
-                  Simpan
-                </button>
               </form>
             </div>
           </Modal.Body>
@@ -579,16 +469,5 @@ const DetailProduk = () => {
     </AdminLayout>
   );
 };
-
-// export const getServerSideProps: GetServerSideProps = async () => {
-//   const props = { dirs: [] };
-//   try {
-//     const dirs = await fs.readdir(path.join(process.cwd(), "/public/images"));
-//     props.dirs = dirs as any;
-//     return { props };
-//   } catch (error) {
-//     return { props };
-//   }
-// };
 
 export default DetailProduk;
