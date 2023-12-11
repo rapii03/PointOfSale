@@ -50,7 +50,7 @@ const expireds: Expired[] = [
   },
 ];
 
-const Notifikasi = ({ counter = 10 }: CounterProps) => {
+const Notifikasi = ({ counter = 15 }: CounterProps) => {
   const [activeTab, setActiveTab] = useState("notifikasi");
   const [isModalVisible, setModalVisible] = useState(false);
 
@@ -81,7 +81,9 @@ const Notifikasi = ({ counter = 10 }: CounterProps) => {
         {isModalVisible && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-            onClick={handleModalToggle}
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
           >
             <div className="bg-white w-full md:w-[533px] p-6 rounded-md shadow-md">
               <div className="header mb-3">
@@ -147,10 +149,10 @@ const Notifikasi = ({ counter = 10 }: CounterProps) => {
                               <div className="btn flex justify-end mt-2">
                                 <button
                                   className="bg-[#FF6B35] text-white px-2 py-1 rounded text-[12px]"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    // Tambahkan logika untuk menangani klik tombol "Detail" di sini
-                                  }}
+                                //   onClick={(event) => {
+                                //     event.stopPropagation();
+                                //     // Tambahkan logika untuk menangani klik tombol "Detail" di sini
+                                //   }}
                                 >
                                   Detail
                                 </button>

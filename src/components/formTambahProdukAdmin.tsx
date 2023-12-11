@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Label, Modal, TextInput, Select } from "flowbite-react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import CustomSelect from "./multipleSelect";
 
 interface IDataForm {
   nama?: string;
@@ -91,6 +92,17 @@ export default function FormTambahProdukAdmin() {
     console.log(dataForm, "useEffect");
   }, [dataForm]);
 
+  const pilihan = [
+    { value: "makanan", label: "Makanan" },
+    { value: "minuman", label: "Minuman" },
+    { value: "barang", label: "Barang" },
+    { value: "kelistrikan", label: "Kelistrikan" },
+  ];
+
+  const handleChange = (selectedOption: any) => {
+    console.log("handleChange", selectedOption);
+  };
+
   return (
     <div className="border border-[#FF6B35] bg-white w-100 h-100 rounded-lg p-5 flex flex-col gap-y-5">
       <form className="flex flex-col gap-y-5" onSubmit={handleSubmit(onSubmit)}>
@@ -110,18 +122,16 @@ export default function FormTambahProdukAdmin() {
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
               Kategori
             </label>
-            <select
-              id="countries"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
-              {...register("kategori", { required: true })}
-            >
-              <option value="">Pilih Kategori</option>
-              <option value="Makanan">Makanan</option>
-              <option value="Minuman">Minuman</option>
-              <option value="Cemilan">Cemilan</option>
-            </select>
+            <CustomSelect
+              options={pilihan}
+              onChange={handleChange}
+              isMulti
+              isClearable
+              placeholder="Pilih Kategori"
+            />
           </div>
         </div>
+
         <div className="flex w-full gap-5">
           <div className="w-1/2 relative ">
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
