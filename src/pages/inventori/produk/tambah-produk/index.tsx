@@ -12,16 +12,7 @@ import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useEdgeStore } from "@/lib/edgestore";
 import { useRouter } from "next/router";
-
-interface Price {
-  id?: string;
-  price: string;
-}
-
-interface Stock {
-  id?: string;
-  stock: number;
-}
+import CustomSelect from "@/components/multipleSelect";
 
 interface Unit {
   id: string;
@@ -43,7 +34,7 @@ interface IDataForm {
   name?: string;
   image?: string;
   expired_at?: string;
-  categories?: Kategori[];
+  categories?: string[];
   group: Group[];
 }
 
@@ -130,15 +121,13 @@ export default function FormTambahProdukAdminPage() {
 
   const columns = ["No", "Satuan", "Jumlah Stok", "Harga Barang", "Aksi"];
   const [targetUpdate, setTargetUpdate] = useState(0);
+  // let selectedKategori: string[] = [];
+  const [selectedKategori, setSelectedKategori] = useState<string[]>([]);
 
   const handleOpenUpdateModal = (num: number) => {
     setStock(dataForm.group[num].stock);
     setTargetUpdate(num);
     setOpenUpdateModal(true);
-  };
-
-  const handleUpdateModal = () => {
-    setOpenUpdateModal(false);
   };
 
   const [stock, setStock] = useState<any>(0);
@@ -157,14 +146,16 @@ export default function FormTambahProdukAdminPage() {
 
   const onSubmit: SubmitHandler<IDataForm> = async (data) => {
     dataForm.name = data.name;
+    console.log(selectedKategori);
+    dataForm.categories = selectedKategori;
     const url = await handleFileUpload(file as File);
     dataForm.image = url;
-    dataForm.categories = data.categories;
     if (data.expired_at) {
       dataForm.expired_at = new Date(data.expired_at).toISOString();
     }
     await axiosPrivate.post("/product/group/add", dataForm);
     router.push("/inventori/produk");
+    console.log(dataForm);
   };
 
   const onSubmitModal: SubmitHandler<Group> = (data) => {
@@ -198,9 +189,16 @@ export default function FormTambahProdukAdminPage() {
     });
   };
 
-  // useEffect(() => {
-  //   console.log(dataForm, "useEffect");
-  // }, [dataForm]);
+  const handleChange = (selectedOption : any) => {
+    const select = selectedOption.map((item: any) => item.value);
+    setSelectedKategori(select);
+  };
+
+  let pilihan : any = [];
+
+  {dataKategori?.data?.map((item) => (
+    pilihan.push({ value: item.id, label: item.name })
+  ))}
 
   return (
     <div>
@@ -234,7 +232,15 @@ export default function FormTambahProdukAdminPage() {
                   <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                     Kategori
                   </label>
-                  <select
+                  <CustomSelect
+                    options={pilihan}
+                    onChange={handleChange}
+                    isMulti
+                    isClearable
+                    placeholder="Pilih Kategori"
+                    // {...register("categories", { required: true })}
+                  />
+                  {/* <select
                     id="countries"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                     {...register("categories.0", { required: true })}
@@ -242,7 +248,8 @@ export default function FormTambahProdukAdminPage() {
                     {dataKategori?.data?.map((item) => (
                       <option value={item.id}>{item.name}</option>
                     ))}
-                  </select>
+                  </select> */}
+                  
                 </div>
               </div>
               <div className="flex w-full gap-5">
