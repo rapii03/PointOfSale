@@ -51,9 +51,18 @@ interface IDataForm {
   name?: string;
   image?: string;
   expired_at?: string;
-  categories?: Kategori[];
+  categories?: string[] | Kategori[];
   group: Group[];
 }
+
+interface SubmitDataForm {
+  id?: string;
+  name?: string;
+  image?: string;
+  expired_at?: string;
+  categories?: string[] | Kategori[];
+}
+
 
 interface ListKategori {
   data: Kategori[];
@@ -65,13 +74,14 @@ interface ListUnit {
 
 const DetailProduk = () => {
   const router = useRouter();
+  const [initDate, setInitDate] = useState();
 
-  const [dataForm, setDataForm] = useState<IDataForm>({
+
+  const [dataForm, setDataForm] = useState<SubmitDataForm>({
     id: "",
     name: "",
     image: "",
     categories: [],
-    group: [],
   });
 
   const axiosPrivate = useAxiosPrivate();
@@ -97,7 +107,7 @@ const DetailProduk = () => {
               },
             }
           )
-          .then((res) => res.data.data);
+          .then((res) => { setInitDate(res.data.data.expired_at); return res.data.data});
       }
     }
   );
@@ -143,6 +153,7 @@ const DetailProduk = () => {
   const [updateId, setUpdateId] = useState("");
   const [oldStock, setOldStock] = useState(0);
   const [file, setFile] = useState<File | null>(null);
+  const [categoriesChanged, setCategoriesChanged] = useState(false);
 
   const handleFileUpload = async (file: File) => {
     if (file) {
@@ -202,9 +213,34 @@ const DetailProduk = () => {
     resetField,
   } = useForm<GroupStock>();
 
-  const onSubmit: SubmitHandler<IDataForm> = (data) => {
-    console.log(dataProduk?.expired_at);
-    console.log(data.expired_at);
+  const onSubmit: SubmitHandler<IDataForm> = async (data) => {
+    dataForm.id = dataProduk?.id as string;
+    dataForm.name = data.name;
+    if(initDate != undefined){
+      dataForm.expired_at = initDate;
+    }
+    if (data.expired_at) {
+      dataForm.expired_at = new Date(data.expired_at).toISOString();
+    }
+    if(categoriesChanged){
+      dataForm.categories = selectedKategori;
+    }else{
+      const defaultCategories : string[] = [];
+      dataProduk?.categories?.map((item: string | Kategori)=>{
+        if (typeof(item)!=="string"){
+          defaultCategories.push(item?.id);
+          dataForm.categories = defaultCategories;
+        }
+      })
+    }
+    dataForm.image = dataProduk?.image as string;
+    if (file) {
+      const url = await handleFileReplace(file, dataProduk?.image as string);
+      dataForm.image = url;
+    }
+    await axiosPrivate.put("/product/group/product-set", dataForm);
+    router.push("/inventori/produk");
+    console.log(dataForm);
   };
 
   const onSubmitModal: SubmitHandler<Group> = async (data) => {
@@ -225,8 +261,9 @@ const DetailProduk = () => {
       data.mode = "min";
     }
     data.stock = result.toString();
-    console.log(data);
-    await axiosPrivate.post("/inventory/stock/set", data);
+    if(result!=0){
+      await axiosPrivate.post("/inventory/stock/set", data);
+    }
     mutate("/product/group/one", dataProduk?.id as string);
     setOpenUpdateModal(false);
   };
@@ -268,6 +305,7 @@ const DetailProduk = () => {
 
   const handleChange = (selectedOption: any) => {
     const select = selectedOption.map((item: any) => item.value);
+    setCategoriesChanged(true);
     setSelectedKategori(select);
   };
 
@@ -305,9 +343,12 @@ const DetailProduk = () => {
                 <input
                   type="text"
                   defaultValue={dataProduk?.name}
+                  autoFocus={true}
+                  // onChange={(e) => setInitName(e.target.value)}
+                  // onFocus={(e) => (e.target.value = initName)}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                   placeholder="Nama Produk"
-                  {...register("name", { required: true })}
+                  {...register("name", { required: true,})}
                 ></input>
               </div>
               <div className="w-1/2">
@@ -354,11 +395,17 @@ const DetailProduk = () => {
                 <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                   Tanggal Kadaluarsa
                 </label>
-                {dataProduk?.expired_at && (
+                {dataProduk?.expired_at ? (
                   <input
                     type="date"
                     defaultValue={new Date(dataProduk.expired_at as string).toLocaleDateString('en-CA')}
-                    {...register("expired_at", { required: true })}
+                    {...register("expired_at", { required: false,})}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
+                  />
+                ): (
+                  <input
+                    type="date"
+                    {...register("expired_at", { required: false,})}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                   />
                 )}
@@ -397,6 +444,7 @@ const DetailProduk = () => {
               </div>
             </div>
             <button
+              type="button"
               className="bg-[#FF6B35] h-fit w-fit px-3 py-2 rounded-md text-white text-md flex justify-center items-center "
               onClick={() => setOpenModal(true)}
             >

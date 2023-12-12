@@ -50,6 +50,11 @@ export default function Product() {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
 
+  const handleSearch = (e: any) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
+
   interface Categories {
     id : string;
     name : string;
@@ -136,7 +141,7 @@ export default function Product() {
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />
       <div className="flex h-fit justify-between items-center mb-6">
-        <Searchbar placeholder="Cari Produk" />
+        <Searchbar placeholder="Cari Produk" onChange={handleSearch} />
         <Link
           href="/inventori/produk/tambah-produk"
           className="bg-[#FF6B35] h-fit px-3 py-1 rounded-md text-white text-md flex justify-center items-center gap-2"

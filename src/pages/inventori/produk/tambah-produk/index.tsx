@@ -62,11 +62,12 @@ export default function FormTambahProdukAdminPage() {
   const [dataForm, setDataForm] = useState<IDataForm>({
     name: "",
     image: "",
-    categories: [],
+    // categories: [],
     group: [],
   });
   const { edgestore } = useEdgeStore();
   const [file, setFile] = useState<File | null>(null);
+  const [fileNotReady, setFileNotReady] = useState<boolean>(false);
 
   const handleFileUpload = async (file: File) => {
     if (file) {
@@ -145,9 +146,16 @@ export default function FormTambahProdukAdminPage() {
   } = useForm<Group>();
 
   const onSubmit: SubmitHandler<IDataForm> = async (data) => {
+    if (!file) {
+      setFileNotReady(true);
+      return;
+    }
     dataForm.name = data.name;
-    console.log(selectedKategori);
-    dataForm.categories = selectedKategori;
+    delete dataForm.categories;
+    delete dataForm.expired_at;
+    if(selectedKategori.length > 0){
+      dataForm.categories = selectedKategori;
+    }
     const url = await handleFileUpload(file as File);
     dataForm.image = url;
     if (data.expired_at) {
@@ -284,7 +292,10 @@ export default function FormTambahProdukAdminPage() {
                         Unggah
                       </label>
                       <p className="text-md text-[#B7B7B7]">
-                        {file === null ? "Unggah Gambar" : file?.name}
+                        {file === null && !fileNotReady ?  "Unggah Gambar" : file?.name}
+                      </p>
+                      <p className="text-md text-red-500">
+                        {file === null && fileNotReady ? "Gambar wajib diisi" : ''}
                       </p>
                     </div>
                   </div>
