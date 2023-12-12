@@ -1,5 +1,6 @@
 import React from "react";
-import Select from "react-select";
+import Select, { StylesConfig } from "react-select";
+
 
 const CustomSelect = ({
   options,
@@ -12,7 +13,7 @@ const CustomSelect = ({
   const colorStyles = {
     control: (styles: any) => ({
       ...styles,
-      backgroundColor: "white",
+      backgroundColor: "#f9fafb",
     }),
     options: (styles: any, { data, isDisable, isFocused, isSelected }: any) => {
       console.log("option", data, isFocused, isSelected, isDisable);
@@ -54,28 +55,17 @@ const CustomSelect = ({
       isClearable={isClearable}
       styles={colorStyles}
       placeholder={placeholder}
+      theme={(theme) => ({
+        ...theme,
+        borderRadius: 5,
+        colors: {
+          ...theme.colors,
+          primary25: "#f9fafb",
+          primary: "#FF6B35",
+        },
+      })}
     />
   );
 };
 
-{
-    /* 
-   contoh penggunaan komponen 
-   
-   const pilihan = [
-      { value: "makanan", label: "Makanan" },
-      { value: "minuman", label: "Minuman" },
-      { value: "barang", label: "Barang" },
-      { value: "kelistrikan", label: "Kelistrikan" },
-    ];
-            <CustomSelect
-                options={pilihan}
-                onChange={handleChange}
-                isMulti
-                isClearable
-                placeholder="Pilih Kategori"
-              /> 
-          */
-  }
-  
 export default CustomSelect;

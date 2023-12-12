@@ -1,13 +1,32 @@
 import React from "react";
+import { useState } from "react";
 import Head from "next/head";
 import LoginAdminLayout from "../../../components/loginAdminLayout";
-import PinInput from "@/components/pinInputField";
 import HelperLogin from "@/components/helperLogin";
-
-// import PinInput from "react-pin-input";
+import OtpInput from "react18-input-otp";
 
 export default function LoginKasir() {
-  const [helper, setHelper] = React.useState('Kode kasir yang di inputkan tidak sesuai!') // Isi Message Dari BE
+  const [helper, setHelper] = React.useState(
+    "Kode kasir yang di inputkan tidak sesuai!"
+  );
+  const [otp, setOtp] = useState("");
+
+  const handleChange = (enteredOtp: any) => {
+    setOtp(enteredOtp);
+  };
+
+  const handleLogin = (e: any) => {
+    e.preventDefault();
+    // Add your login logic here, using the 'otp' state value
+    const kodeKasir = otp;
+    console.log("OTP value:", kodeKasir);
+    console.log("Tipe Data:", typeof kodeKasir);
+
+    alert(kodeKasir);
+    setOtp("");
+    // You can replace the console.log with your login API call or other logic
+  };
+
   return (
     <div>
       <Head>
@@ -22,11 +41,24 @@ export default function LoginKasir() {
               Login Sebagai Kasir
             </p>
             <p className="font-thin text-center mb-8">Masukkan Pin Anda</p>
-            <form action="">
-              <div className="flex gap-3 items-center justify-center">
-                <PinInput>
-                  <HelperLogin message={helper}/>
-                </PinInput>
+            <form>
+              <div className="flex flex-col gap-3 items-center justify-center">
+                <OtpInput
+                  isInputNum={true}
+                  value={otp}
+                  onChange={handleChange}
+                  numInputs={6}
+                  containerStyle="gap-x-3 items-center justify-center mb-2 rounded-lg"
+                  inputStyle="w-40 rounded-md aspect-square text-center text-4xl  font-semibold p-4 focus:border-[#FF6B35] focus:ring-[#FF6B35] mt-4 rounded-md"
+                  separator={<span> </span>}
+                />
+                <HelperLogin message={helper} />
+                <button
+                  className="bg-[#FF6B35] w-full rounded-md p-2 font-semibold text-white"
+                  onClick={handleLogin}
+                >
+                  Login
+                </button>
               </div>
             </form>
           </div>
