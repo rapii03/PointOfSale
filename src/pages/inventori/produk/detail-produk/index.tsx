@@ -11,7 +11,7 @@ import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useEdgeStore } from "@/lib/edgestore";
 import { AxiosRequestConfig } from "axios";
-import MODERN_BROWSERSLIST_TARGET from "next/dist/shared/lib/modern-browserslist-target";
+import CustomSelect from "@/components/multipleSelect";
 
 interface Price {
   id?: string;
@@ -29,14 +29,14 @@ interface Unit {
 }
 
 interface Group {
-  id:string
+  id: string;
   price?: Price;
   stock?: Stock;
   unit?: Unit;
 }
 
 interface GroupStock {
-  id:string
+  id: string;
   mode: string;
   stock: number;
 }
@@ -75,8 +75,13 @@ const DetailProduk = () => {
   const axiosPrivate = useAxiosPrivate();
   const [accessToken, _] = useLocalStorage("accessToken", "");
 
-  const { data:dataProduk, error, isLoading }: SWRResponse<IDataForm, any, boolean> =
-    useSWR(`/product/group/one`, (url) =>
+  const {
+    data: dataProduk,
+    error,
+    isLoading,
+  }: SWRResponse<IDataForm, any, boolean> = useSWR(
+    `/product/group/one`,
+    (url) =>
       axiosPrivate
         .post(
           url,
@@ -90,7 +95,7 @@ const DetailProduk = () => {
           }
         )
         .then((res) => res.data.data)
-    );
+  );
 
   const {
     data: dataKategori,
@@ -175,11 +180,15 @@ const DetailProduk = () => {
   ];
 
   const columns = ["No", "Satuan", "Jumlah Stok", "Harga Barang", "Aksi"];
+  const [selectedKategori, setSelectedKategori] = useState<string[]>([]);
 
   const [stock, setStock] = useState<any>(0);
   const { register, handleSubmit } = useForm<IDataForm>();
-  const { register: registerModal, handleSubmit: handleSubmitDataModal, resetField: resetFieldModal } =
-    useForm<Group>();
+  const {
+    register: registerModal,
+    handleSubmit: handleSubmitDataModal,
+    resetField: resetFieldModal,
+  } = useForm<Group>();
   const {
     register: registerUpdateModal,
     handleSubmit: handleSubmitUpdateModal,
@@ -191,7 +200,7 @@ const DetailProduk = () => {
   };
 
   const onSubmitModal: SubmitHandler<Group> = async (data) => {
-    data.id = dataProduk?.id as string
+    data.id = dataProduk?.id as string;
     await axiosPrivate.put("/product/group/group-set", data);
     mutate("/product/group/one", dataProduk?.id as string);
     onCloseModal();
@@ -199,17 +208,17 @@ const DetailProduk = () => {
     resetFieldModal("price");
   };
 
-  const handleGroupUpdate = (oldStock : number, newStock: number) => {
+  const handleGroupUpdate = (oldStock: number, newStock: number) => {
     let result = 0;
     result = oldStock - newStock;
     setMode("plus");
-    if(oldStock < newStock) {
+    if (oldStock < newStock) {
       result = newStock - oldStock;
       setMode("minus");
       return result;
     }
     return result;
-  }
+  };
 
   const onSubmitUpdateModal: SubmitHandler<GroupStock> = async (data) => {
     const old = oldStock;
@@ -218,7 +227,7 @@ const DetailProduk = () => {
     data.stock = result;
     data.mode = mode;
     console.log(data);
-    
+
     // await setNewStock(data.stock as number);
     // console.log(oldStock, newStock);
     // const updateGroup = await handleGroupUpdate(data, oldStock, newStock);
@@ -252,11 +261,22 @@ const DetailProduk = () => {
     onCloseDeleteModal();
   };
 
-  // const saveData = () => {
-  //   // alert("Data Tersimpan");
-  //   console.log(data)
-  //   // console.log(dataKategori?.data);
-  // };
+  let pilihan: any = [];
+
+  {
+    dataKategori?.data?.map((item) =>
+      pilihan.push({ value: item.id, label: item.name })
+    );
+  }
+
+  const handleChange = (selectedOption: any) => {
+    const select = selectedOption.map((item: any) => item.value);
+    setSelectedKategori(select);
+  };
+
+  useEffect(() => {
+    mutate("/product/group/one", router.query.id as string);
+  }, [router.isReady]);  
 
   return (
     <AdminLayout>
@@ -294,7 +314,32 @@ const DetailProduk = () => {
               <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Kategori
               </label>
-              <select
+              {dataProduk && (
+                <CustomSelect
+                  options={pilihan}
+                  // defaultValue={[{label:"mantap", value: '1'}]}
+                  defaultValue={dataProduk?.categories?.map((item: any) => ({
+                    value: item.id,
+                    label: item.name,
+                  }))}
+                  onChange={handleChange}
+                  isMulti
+                  isClearable
+                  placeholder="Pilih Kategori"
+                  // {...register("categories", { required: true })}
+                />
+              )}
+              {!dataProduk && (
+                <CustomSelect
+                  options={pilihan}
+                  onChange={handleChange}
+                  isMulti
+                  isClearable
+                  placeholder="Pilih Kategori"
+                  // {...register("categories", { required: true })}
+                />
+              )}
+              {/* <select
                 id="countries"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                 {...register("categories", { required: true })}
@@ -302,11 +347,7 @@ const DetailProduk = () => {
                 {dataKategori?.data?.map((categories) => (
                   <option value={categories.name}>{categories.name}</option>
                 ))}
-                 {/* <option value="">Pilih Kategori</option>
-                <option value="Makanan">Makanan</option>
-                <option value="Minuman">Minuman</option>
-                <option value="Cemilan">Cemilan</option>  */}
-              </select>
+              </select> */}
             </div>
           </div>
           <div className="flex w-full gap-5">
@@ -315,9 +356,7 @@ const DetailProduk = () => {
                 Tanggal Kadaluarsa
               </label>
               <input
-                defaultValue={  
-                  dataProduk?.expired_at
-                }
+                defaultValue={dataProduk?.expired_at}
                 type="date"
                 {...register("expired_at", {
                   // value: true,

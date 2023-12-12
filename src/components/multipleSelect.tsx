@@ -9,6 +9,7 @@ const CustomSelect = ({
   isClearable,
   styles,
   placeholder,
+  defaultValue
 }: any) => {
   const colorStyles = {
     control: (styles: any) => ({
@@ -49,6 +50,7 @@ const CustomSelect = ({
 
   return (
     <Select
+      defaultValue={defaultValue}
       options={options}
       onChange={onChange}
       isMulti={isMulti}
