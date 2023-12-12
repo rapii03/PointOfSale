@@ -1,4 +1,6 @@
 # build output
+.env
+.vscode
 dist
 .next
 target
