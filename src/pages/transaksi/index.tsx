@@ -4,8 +4,10 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 // import Searchbar from "@/components/Searchbar";
 import { Pagination } from "flowbite-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useReactToPrint } from "react-to-print";
+import Invoice from "@/components/Invoice"
 
 export default function Transaksi() {
   const paginationTheme = {
@@ -127,8 +129,18 @@ export default function Transaksi() {
     }
   }, [startDateValue, endDateValue, handleSubmit, onSubmit]);
 
+  // function print
+  const componentRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
   return (
     <AdminLayout>
+      <div className="absolute invisible">
+        <Invoice ref={componentRef} />
+      </div>
       <Breadcrumbs crumbs={crumbs} />
       <div className="flex h-fit justify-between items-center mb-6">
         <div className="flex  text-sm">
@@ -176,7 +188,10 @@ export default function Transaksi() {
             </div>
           </form>
         </div>
-        <button className="w-[9.21rem] h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-2 text-sm">
+        <button
+          className="w-[9.21rem] h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-2 text-sm"
+          onClick={handlePrint}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="21"
@@ -268,7 +283,12 @@ export default function Transaksi() {
                 {col.status != "Pending" && (
                   <td className="border-collapse p2 px-0 text-center">
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
-                      <button className="text-[#FF6B35] text-md">Print</button>
+                      <button
+                        className="text-[#FF6B35] text-md"
+                        onClick={handlePrint}
+                      >
+                        Print
+                      </button>
                       <Link
                         href={`/transaksi/detail-transaksi-${col.id}`}
                         className="text-blue-700 text-md"
