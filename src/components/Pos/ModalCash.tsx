@@ -5,17 +5,25 @@ export interface ModalProps {
   value: number;
   onChange: (value: number) => void;
   onClose: () => void;
+  image: string;
+  username: string;
 }
 
-const ModalCash = ({ value, onChange, onClose }: ModalProps) => {
+const ModalCash = ({ value, onChange, onClose, image, username }: ModalProps) => {
   const [inputValue, setInputValue] = useState(value);
 
   const handleInputChange = (newValue: number) => {
+    if (!newValue) {
+      onChange(0);
+      setInputValue(0);
+      return;
+    }
+    onChange(newValue);
     setInputValue(newValue);
   };
 
   const handleButtonClick = () => {
-    onChange(inputValue);
+    // onChange(inputValue);
     onClose();
   };
 
@@ -29,10 +37,10 @@ const ModalCash = ({ value, onChange, onClose }: ModalProps) => {
         <div className="wrap-card w-[380px] flex flex-col gap-3 p-3 rounded-md border border-bg-grey">
           <div className="imgcaption mb-2 gap-2 flex items-center">
             <div className="foto">
-              <img className="rounded-full w-[40px] h-[40px] object-cover" src="/assets/pos/profile.png" alt="" />
+              <img className="rounded-full w-[40px] h-[40px] object-cover" src={image as string} alt="Kasir" />
             </div>
             <div className="">
-              <div className="nama text-[14px] font-semibold">Amel Sinta</div>
+              <div className="nama text-[14px] font-semibold">{username}</div>
               <div className=" text-gray-500 kasir text-[12px]">Kasir</div>
             </div>
           </div>

@@ -13,6 +13,11 @@ import { Modal, Pagination } from "flowbite-react";
 import DateComponent from '@/components/Pos/DateComponent';
 import TimeComponent from '@/components/Pos/TimeComponent';
 import Searchbar from '@/components/Searchbar';
+import loading from '@/components/loading';
+import useAxiosPrivate from '@/hooks/useAxiosPrivate';
+import useLocalStorage from '@/hooks/useLocalStorage';
+import { useRouter } from 'next/navigation';
+import useSWR, { SWRResponse } from 'swr';
 
 
 
@@ -52,43 +57,43 @@ export interface Product {
     waktu?: string; // Add this line for 'waktu' property
 }
 
-const dummyProducts: Product[] = [
-    {
-        id: "1",
-        image: 'assets/pos/indomie.png',
-        name: 'Indomie', // Unique name
-        group: [
-            { id: "1", Unit: 'Pcs', price: 3500, stock: 99 },
-            { id: "2", Unit: 'Dus', price: 50000, stock: 50 },
-        ],
-    },
-    {
-        id: "2",
-        image: 'assets/pos/indomie.png',
-        name: 'Susu', // Unique name
-        group: [
-            { id: "1", Unit: 'Pcs', price: 5500, stock: 21 },
-            { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
-        ],
-    },
-    {
-        id: "3",
-        image: 'assets/pos/indomie.png',
-        name: 'Bimoli', // Unique name
-        group: [
-            { id: "1", Unit: 'Pcs', price: 5500, stock: 21 },
-            { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
-        ],
-    },
-    {
-        id: "4",
-        image: 'assets/pos/indomie.png',
-        name: 'Kukubima', // Unique name
-        group: [
-            { id: "1", Unit: 'Pcs', price: 3000, stock: 21 },
-            { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
-        ],
-    },
+let dummyProducts: Product[] = [
+    // {
+    //     id: "1",
+    //     image: 'assets/pos/indomie.png',
+    //     name: 'Indomie', // Unique name
+    //     group: [
+    //         { id: "1", Unit: 'Pcs', price: 3500, stock: 99 },
+    //         { id: "2", Unit: 'Dus', price: 50000, stock: 50 },
+    //     ],
+    // },
+    // {
+    //     id: "2",
+    //     image: 'assets/pos/indomie.png',
+    //     name: 'Susu', // Unique name
+    //     group: [
+    //         { id: "1", Unit: 'Pcs', price: 5500, stock: 21 },
+    //         { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
+    //     ],
+    // },
+    // {
+    //     id: "3",
+    //     image: 'assets/pos/indomie.png',
+    //     name: 'Bimoli', // Unique name
+    //     group: [
+    //         { id: "1", Unit: 'Pcs', price: 5500, stock: 21 },
+    //         { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
+    //     ],
+    // },
+    // {
+    //     id: "4",
+    //     image: 'assets/pos/indomie.png',
+    //     name: 'Kukubima', // Unique name
+    //     group: [
+    //         { id: "1", Unit: 'Pcs', price: 3000, stock: 21 },
+    //         { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
+    //     ],
+    // },
     // Add more dummy data as needed
 ];
 
@@ -142,6 +147,25 @@ const Pos = () => {
     const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
     const [totalPrice, setTotalPrice] = useState<number>(0);
     const [discount, setDiscount] = useState<number>(0);
+    const [income, setIncome] = useState<number>(0);
+
+    // Loading 
+    const [isLoadingUser, setIsLoadingUser] = useState(true);
+    const [isLoadingCashOnHand, setIsLoadingCashOnHand] = useState(true);
+    
+    // Use
+    const axiosPrivate = useAxiosPrivate();
+    const router = useRouter();
+
+
+    // Use LocalStorage
+    const [nickname, setNickname] = useLocalStorage("nickname", "");
+    const [image, setImage] = useLocalStorage("image", "");
+    const [username, setUsername] = useLocalStorage("username", "");
+    const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
+    const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
+
+    const [search, setSearch] = useState<string>("");
 
     const addToCart = (product: Product, selectedUnitId: string) => {
         console.log("Adding to cart:", product, selectedProducts);
@@ -216,13 +240,21 @@ const Pos = () => {
 
     // modal
     const [modalValue, setModalValue] = useState<number>(0);
-    const [isModalOpen, setIsModalOpen] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleModalChange = (value: number) => {
         setModalValue(value);
     };
 
-    const handleModalClose = () => {
+    const handleModalClose = async () => {
+        await axiosPrivate.post("/pos/cashier/cash-on-hand/set", {
+            cash_on_hand: modalValue.toString(),    
+        }, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            }
+        })
+        setIsLoadingCashOnHand(true);
         setIsModalOpen(false);
     };
 
@@ -401,8 +433,110 @@ const Pos = () => {
         handleCloseRiwayat();
     };
 
-    // RIWAYAT
+    const handleLogout = () => {
+        setImage("");
+        setUsername("");
+        setAccessToken("");
+        setRefreshToken("");
+        router.push("/login");
+    }
 
+    const handleSearch = (e: any) => {
+        setSearch(e.target.value);
+        setCurrentPage(1);
+    }
+
+
+    // All Products
+    const {
+        data,
+        error,
+        isLoading,
+      }: SWRResponse<any, any, boolean> = useSWR(
+        `/pos/product/all?search=${search}`,
+        (url) =>
+          axiosPrivate
+            .get(url, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            })
+            .then((res) => res.data?.data)
+      );
+
+      
+    if (!isLoading) {
+        const dataProducts = data?.map((product: any) => {
+            const group: any = product.group.map((group: any) => ({
+                id: group.id,
+                Unit: group.unit,
+                price: group.price,
+                stock: group.stock,
+            }))
+            return {
+                id: product.id,
+                name: product.name,
+                image: product.image,
+                group: group
+            }
+        })
+        dummyProducts = dataProducts;
+    }
+    
+
+    // Check Authorization
+    const checkAuth = async () => {
+        if (!accessToken || !username || !image || nickname) {
+            router.push("/login");
+        } else {
+            setIsLoadingUser(false);
+        }
+    }
+
+    // Check Cashier Daily Cash on Hand
+    const dailyCashOnHand = async () => {
+        try {
+            const response = await axiosPrivate.get("/pos/cashier/cash-on-hand/get", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+            const cash_on_hand = parseInt(response.data.data);
+            setModalValue(cash_on_hand);
+        } catch (error: any) {
+            if (error?.response?.status === 404) {
+                setIsModalOpen(true);
+            }
+            console.error(error);
+        }
+        setIsLoadingCashOnHand(false);
+    }
+
+    const getIncome = async () => {
+        try {
+            const response = await axiosPrivate.get("/pos/cashier/income/get", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+            const income = parseInt(response.data.data);
+            setIncome(income);
+        } catch (error: any) {
+            console.error(error);
+        }
+    }
+
+    // Loading
+    if (isLoadingUser) {
+        checkAuth();
+        return loading();
+    }
+    
+    if (isLoadingCashOnHand) {
+        getIncome();
+        dailyCashOnHand();
+        return loading();
+    }
 
     return (
         <div>
@@ -414,14 +548,14 @@ const Pos = () => {
                         <div className="left text-[16px] font-semibold text-white ">Yang's Grosir</div>
                         <div className="right text-end text-white">
                             <p className="text-[14px]">Penjualan</p>
-                            <p className="text-[16px] font-bold">Rp. 560.500</p>
+                            <p className="text-[16px] font-bold">Rp. {income.toLocaleString('id-ID')}</p>
                         </div>
                     </div>
 
                     {/* tab card */}
                     <div className="headcard mt-2 gap-3 grid h-[36px] grid-cols-12 ">
                         <div className="search col-span-6">
-                            <Search placeholder="Cari Produk" />
+                            <Search search={search} onChange={handleSearch}  placeholder="Cari Produk" />
                         </div>
                         <div className="btn col-span-6 text-[14px] flex gap-3">
                             <div className="text-md bg-white rounded-md flex-1 h-full border focus:ring-grey focus:border-grey border-grey">
@@ -447,6 +581,7 @@ const Pos = () => {
                             <div key={product.id} className="cardProduct col-span-3">
                                 <CardProduct
                                     name={product.name}
+                                    image={product.image}
                                     group={product.group}
                                     onAddToCart={(selectedUnitId) => addToCart(product, selectedUnitId)}
                                 />
@@ -465,7 +600,7 @@ const Pos = () => {
                             <p className="text-[16px] text-primary font-bold">Rp. {modalValue.toLocaleString("id-ID")}</p>
                         </div>
                         <div className="right">
-                            <ProfilePos />
+                            <ProfilePos username={username} image={image} logout={handleLogout} />
                         </div>
                     </div>
 
@@ -475,7 +610,7 @@ const Pos = () => {
                             <div className="header bg-primary flex justify-between text-white p-3">
                                 <div className="left font-semibold">
                                     <div className="text-[20px]">Pesanan Baru</div>
-                                    <div className="text-[14px]">#Inv123</div>
+                                    {/* <div className="text-[14px]">#Inv123</div> */}
                                 </div>
                                 <div className="right">
                                     <div className="font-semibold text-[14px]">
@@ -584,7 +719,7 @@ const Pos = () => {
                 {/* halaman keranjang */}
                 {/* Komponen ModalCash */}
                 {isModalOpen && (
-                    <ModalCash value={modalValue} onChange={handleModalChange} onClose={handleModalClose} />
+                    <ModalCash value={modalValue} onChange={handleModalChange} onClose={handleModalClose} image={image} username={username} />
                 )}
             </div>
             {/* payment */}
