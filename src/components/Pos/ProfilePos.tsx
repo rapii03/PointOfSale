@@ -15,7 +15,7 @@ const ProfilePos = () => {
         arrowIcon={false}
         inline
       >
-        <Dropdown.Item className='text-[14px] p-1'>Keluar</Dropdown.Item>
+        <Dropdown.Item href='/' className='text-[14px] p-1'>Keluar</Dropdown.Item>
       </Dropdown>
     );
 }
