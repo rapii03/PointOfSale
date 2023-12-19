@@ -188,9 +188,11 @@ export default function KelolaAdmin() {
       setShowToastFailed(true);
       return;
     }
+    setFileNotReady(false);
+    setFile(null);
     setShowToast(true);
     setTimeout(() => {
-      setShowToast(true);
+      setShowToast(false);
     }, 2000);
     mutate(`/admin/all?page=${currentPage}&search=${search}`);
     onCloseAddModal();
@@ -212,6 +214,8 @@ export default function KelolaAdmin() {
       setShowToastEditFailed(true);
       return;
     }
+    setFileNotReady(false);
+    setFile(null);
     setShowToastEdit(true);
     setTimeout(() => {
       setShowToastEdit(false);
@@ -238,7 +242,7 @@ export default function KelolaAdmin() {
     setShowToastDelete(true);
     setTimeout(() => {
       setShowToastDelete(false);
-    });
+    },2000);
     mutate(`/admin/all?page=${currentPage}&search=${search}`);
     onCloseDeleteModal();
   };

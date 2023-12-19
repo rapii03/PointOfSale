@@ -11,6 +11,7 @@ import { SWRResponse, mutate } from "swr";
 import useSWR from "swr";
 import { AxiosRequestConfig } from "axios";
 import { useEdgeStore } from "@/lib/edgestore";
+import ToastComponent from "@/components/Toast";
 
 export default function KelolaKasir() {
   interface Data {
@@ -32,6 +33,13 @@ export default function KelolaKasir() {
   const [namaKasir, setNamaKasir] = useState("");
   const [updateId, setUpdateId] = useState("");
   const [initName, setInitName] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [showToastFailed, setShowToastFailed] = useState(false);
+  const [showToastEdit, setShowToastEdit] = useState(false);
+  const [showToastEditFailed, setShowToastEditFailed] = useState(false);
+  const [showToastDelete, setShowToastDelete] = useState(false);
+  const [showToastDeleteFailed, setShowToastDeleteFailed] = useState(false);
+  const [fileNotReady, setFileNotReady] = useState<boolean>(false);
 
   const {
     data: dataKasir,
@@ -140,20 +148,32 @@ export default function KelolaKasir() {
   };
 
   const onSubmit: SubmitHandler<Data> = async (data) => {
+    if (!file) {
+      setFileNotReady(true);
+      return;
+    }
     try {
       const url = await handleFileUpload(file as File);
       data.image = url;
       // console.log(data);
       await axiosPrivate.post("/cashier/add", data);
     } catch (e: any) {
-      let statusText: string | undefined = e?.response?.statusText;
-      let msg: string | undefined = e?.response?.data?.message;
-      let status: number | undefined = e?.response?.status;
-      if (status === 400) {
-        msg = e?.response?.data?.message[0]?.message;
-      }
-      alert(statusText + " : " + status + "\nPesan : " + msg);
+      // let statusText: string | undefined = e?.response?.statusText;
+      // let msg: string | undefined = e?.response?.data?.message;
+      // let status: number | undefined = e?.response?.status;
+      // if (status === 400) {
+      //   msg = e?.response?.data?.message[0]?.message;
+      // }
+      // alert(statusText + " : " + status + "\nPesan : " + msg);
+      setShowToastFailed(true);
+      return;
     }
+    setFileNotReady(false);
+    setFile(null);
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 2000);
     mutate(`/cashier/all?page=${currentPage}&search=${search}`);
     onCloseAddModal();
   };
@@ -165,14 +185,22 @@ export default function KelolaKasir() {
       data.image = url;
       await axiosPrivate.put("/cashier/update", data);
     } catch (e: any) {
-      let statusText: string | undefined = e?.response?.statusText;
-      let msg: string | undefined = e?.response?.data?.message;
-      let status: number | undefined = e?.response?.status;
-      if (status === 400) {
-        msg = e?.response?.data?.message[0]?.message;
-      }
-      alert(statusText + " : " + status + "\nPesan : " + msg);
+      // let statusText: string | undefined = e?.response?.statusText;
+      // let msg: string | undefined = e?.response?.data?.message;
+      // let status: number | undefined = e?.response?.status;
+      // if (status === 400) {
+      //   msg = e?.response?.data?.message[0]?.message;
+      // }
+      // alert(statusText + " : " + status + "\nPesan : " + msg);
+      setFileNotReady(false);
+      setFile(null);
+      setShowToastEditFailed(true);
+      return;
     }
+    setShowToastEdit(true);
+    setTimeout(() => {
+      setShowToastEdit(false);
+    }, 2000);
     mutate(`/cashier/all?page=${currentPage}&search=${search}`);
     onCloseModal();
   };
@@ -184,14 +212,19 @@ export default function KelolaKasir() {
     try {
       await axiosPrivate.delete("/cashier/delete", data);
     } catch (e: any) {
-      let statusText: string | undefined = e?.response?.statusText;
-      let msg: string | undefined = e?.response?.data?.message;
-      let status: number | undefined = e?.response?.status;
-      if (status === 400) {
-        msg = e?.response?.data?.message[0]?.message;
-      }
-      alert(statusText + " : " + status + "\nPesan : " + msg);
+      // let statusText: string | undefined = e?.response?.statusText;
+      // let msg: string | undefined = e?.response?.data?.message;
+      // let status: number | undefined = e?.response?.status;
+      // if (status === 400) {
+      //   msg = e?.response?.data?.message[0]?.message;
+      // }
+      // alert(statusText + " : " + status + "\nPesan : " + msg);
+      setShowToastDeleteFailed(true);
     }
+    setShowToastDelete(true);
+    setTimeout(() => {
+      setShowToastDelete(true);
+    }, 2000);
     mutate(`/cashier/all?page=${currentPage}&search=${search}`);
     onCloseDeleteModal();
   };
@@ -249,7 +282,9 @@ export default function KelolaKasir() {
               <tr>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
-                    {dataKasir?.meta?.itemsPerPage * (currentPage - 1) + colIndex + 1}
+                    {dataKasir?.meta?.itemsPerPage * (currentPage - 1) +
+                      colIndex +
+                      1}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
@@ -354,6 +389,7 @@ export default function KelolaKasir() {
                         <input
                           id="file-upload"
                           type="file"
+                          accept=".png, .jpg, .jpeg"
                           className="hidden"
                           onChange={(e) => {
                             setFile(e.target.files?.[0] ?? null);
@@ -362,7 +398,14 @@ export default function KelolaKasir() {
                         Unggah
                       </label>
                       <p className="text-md text-[#B7B7B7]">
-                        {file === null ? "Unggah Gambar" : file?.name}
+                        {file === null && !fileNotReady
+                          ? "Unggah Gambar"
+                          : file?.name}
+                      </p>
+                      <p className="text-md text-red-500">
+                        {file === null && fileNotReady
+                          ? "Gambar wajib diisi"
+                          : ""}
                       </p>
                     </div>
                   </div>
@@ -419,25 +462,33 @@ export default function KelolaKasir() {
                   <label className="block text-sm font-medium text-gray-900 dark:text-white">
                     Foto Kasir
                   </label>
-                    <div className="p-2 ps-0 flex items-center gap-3">
-                      <label
-                        htmlFor="file-upload"
-                        className="bg-[#FF6B35] text-white rounded-md p-2 px-4 text-md "
-                      >
-                        <input
-                          id="file-upload"
-                          type="file"
-                          className="hidden"
-                          onChange={(e) => {
-                            setFile(e.target.files?.[0] ?? null);
-                          }}
-                        />
-                        Unggah
-                      </label>
-                      <p className="text-md text-[#B7B7B7]">
-                        {file === null ? "Unggah Gambar" : file?.name}
-                      </p>
-                    </div>
+                  <div className="p-2 ps-0 flex items-center gap-3">
+                    <label
+                      htmlFor="file-upload"
+                      className="bg-[#FF6B35] text-white rounded-md p-2 px-4 text-md "
+                    >
+                      <input
+                        id="file-upload"
+                        type="file"
+                        accept=".png, .jpg, .jpeg"
+                        className="hidden"
+                        onChange={(e) => {
+                          setFile(e.target.files?.[0] ?? null);
+                        }}
+                      />
+                      Unggah
+                    </label>
+                    <p className="text-md text-[#B7B7B7]">
+                      {file === null && !fileNotReady
+                        ? "Unggah Gambar"
+                        : file?.name}
+                    </p>
+                    <p className="text-md text-red-500">
+                      {file === null && fileNotReady
+                        ? "Gambar wajib diisi"
+                        : ""}
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end">
@@ -495,6 +546,132 @@ export default function KelolaKasir() {
           </div>
         </Modal.Body>
       </Modal>
+      {showToast && (
+        <ToastComponent
+          className="absolute bottom-[6%] right-[8%]"
+          text="Berhasil menambahkan admin."
+          onDismiss={() => setShowToast(false)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="26"
+            height="26"
+            viewBox="0 0 26 26"
+            fill="none"
+          >
+            <path
+              d="M13.0013 2.16626C7.0213 2.16626 2.16797 7.01959 2.16797 12.9996C2.16797 18.9796 7.0213 23.8329 13.0013 23.8329C18.9813 23.8329 23.8346 18.9796 23.8346 12.9996C23.8346 7.01959 18.9813 2.16626 13.0013 2.16626ZM10.0655 17.6471L6.1763 13.7579C5.7538 13.3354 5.7538 12.6529 6.1763 12.2304C6.5988 11.8079 7.2813 11.8079 7.7038 12.2304L10.8346 15.3504L18.288 7.89709C18.7105 7.47459 19.393 7.47459 19.8155 7.89709C20.238 8.31959 20.238 9.00209 19.8155 9.42459L11.593 17.6471C11.1813 18.0696 10.488 18.0696 10.0655 17.6471Z"
+              fill="#10B981"
+            />
+          </svg>
+        </ToastComponent>
+      )}
+      {showToastFailed && (
+        <ToastComponent
+          className="absolute bottom-[6%] right-[8%]"
+          text="Gagal menambahkan admin."
+          onDismiss={() => setShowToastFailed(false)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="22"
+            height="22"
+            viewBox="0 0 22 22"
+            fill="none"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M3.1735 18.4965C2.16738 17.4904 1.36928 16.2959 0.824765 14.9814C0.280256 13.6668 1.06012e-08 12.2579 0 10.835C-1.06012e-08 9.41213 0.280256 8.00319 0.824765 6.68862C1.36927 5.37406 2.16738 4.17962 3.1735 3.1735C4.17962 2.16738 5.37406 1.36927 6.68862 0.824765C8.00319 0.280256 9.41213 -1.06012e-08 10.835 0C12.2579 1.06012e-08 13.6668 0.280256 14.9814 0.824765C16.2959 1.36928 17.4904 2.16738 18.4965 3.1735C20.5285 5.20545 21.67 7.96138 21.67 10.835C21.67 13.7086 20.5285 16.4645 18.4965 18.4965C16.4645 20.5285 13.7086 21.67 10.835 21.67C7.96138 21.67 5.20545 20.5285 3.1735 18.4965ZM8.16695 6.73135C7.9744 6.55193 7.71972 6.45425 7.45657 6.45889C7.19342 6.46353 6.94234 6.57014 6.75624 6.75624C6.57014 6.94234 6.46353 7.19342 6.45889 7.45657C6.45425 7.71972 6.55193 7.9744 6.73135 8.16695L9.3994 10.835L6.73135 13.503C6.63155 13.596 6.55151 13.7082 6.49599 13.8328C6.44047 13.9574 6.41062 14.0919 6.40822 14.2283C6.40581 14.3647 6.4309 14.5001 6.48198 14.6266C6.53307 14.7531 6.60911 14.868 6.70556 14.9644C6.80202 15.0609 6.91691 15.1369 7.04339 15.188C7.16987 15.2391 7.30535 15.2642 7.44173 15.2618C7.57812 15.2594 7.71262 15.2295 7.83722 15.174C7.96182 15.1185 8.07396 15.0384 8.16695 14.9387L10.835 12.2706L13.503 14.9387C13.596 15.0384 13.7082 15.1185 13.8328 15.174C13.9574 15.2295 14.0919 15.2594 14.2283 15.2618C14.3647 15.2642 14.5001 15.2391 14.6266 15.188C14.7531 15.1369 14.868 15.0609 14.9644 14.9644C15.0609 14.868 15.1369 14.7531 15.188 14.6266C15.2391 14.5001 15.2642 14.3647 15.2618 14.2283C15.2594 14.0919 15.2295 13.9574 15.174 13.8328C15.1185 13.7082 15.0384 13.596 14.9387 13.503L12.2706 10.835L14.9387 8.16695C15.0384 8.07396 15.1185 7.96182 15.174 7.83722C15.2295 7.71262 15.2594 7.57812 15.2618 7.44173C15.2642 7.30535 15.2391 7.16987 15.188 7.04339C15.1369 6.91691 15.0609 6.80202 14.9644 6.70556C14.868 6.60911 14.7531 6.53307 14.6266 6.48198C14.5001 6.4309 14.3647 6.40581 14.2283 6.40822C14.0919 6.41062 13.9574 6.44047 13.8328 6.49599C13.7082 6.55151 13.596 6.63155 13.503 6.73135L10.835 9.3994L8.16695 6.73135Z"
+              fill="#FB1919"
+            />
+          </svg>
+        </ToastComponent>
+      )}
+      {showToastEdit && (
+        <ToastComponent
+          className="absolute bottom-[6%] right-[8%]"
+          text="Berhasil memperbarui admin."
+          onDismiss={() => setShowToastEdit(false)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="26"
+            height="26"
+            viewBox="0 0 26 26"
+            fill="none"
+          >
+            <path
+              d="M13.0013 2.16626C7.0213 2.16626 2.16797 7.01959 2.16797 12.9996C2.16797 18.9796 7.0213 23.8329 13.0013 23.8329C18.9813 23.8329 23.8346 18.9796 23.8346 12.9996C23.8346 7.01959 18.9813 2.16626 13.0013 2.16626ZM10.0655 17.6471L6.1763 13.7579C5.7538 13.3354 5.7538 12.6529 6.1763 12.2304C6.5988 11.8079 7.2813 11.8079 7.7038 12.2304L10.8346 15.3504L18.288 7.89709C18.7105 7.47459 19.393 7.47459 19.8155 7.89709C20.238 8.31959 20.238 9.00209 19.8155 9.42459L11.593 17.6471C11.1813 18.0696 10.488 18.0696 10.0655 17.6471Z"
+              fill="#10B981"
+            />
+          </svg>
+        </ToastComponent>
+      )}
+      {showToastDelete && (
+        <ToastComponent
+          className="absolute bottom-[6%] right-[8%]"
+          text="Berhasil menghapus admin."
+          onDismiss={() => setShowToastDelete(false)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="26"
+            height="26"
+            viewBox="0 0 26 26"
+            fill="none"
+          >
+            <path
+              d="M13.0013 2.16626C7.0213 2.16626 2.16797 7.01959 2.16797 12.9996C2.16797 18.9796 7.0213 23.8329 13.0013 23.8329C18.9813 23.8329 23.8346 18.9796 23.8346 12.9996C23.8346 7.01959 18.9813 2.16626 13.0013 2.16626ZM10.0655 17.6471L6.1763 13.7579C5.7538 13.3354 5.7538 12.6529 6.1763 12.2304C6.5988 11.8079 7.2813 11.8079 7.7038 12.2304L10.8346 15.3504L18.288 7.89709C18.7105 7.47459 19.393 7.47459 19.8155 7.89709C20.238 8.31959 20.238 9.00209 19.8155 9.42459L11.593 17.6471C11.1813 18.0696 10.488 18.0696 10.0655 17.6471Z"
+              fill="#10B981"
+            />
+          </svg>
+        </ToastComponent>
+      )}
+      {showToastEditFailed && (
+        <ToastComponent
+          className="absolute bottom-[6%] right-[8%]"
+          text="Gagal memperbarui admin."
+          onDismiss={() => setShowToastEditFailed(false)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="22"
+            height="22"
+            viewBox="0 0 22 22"
+            fill="none"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M3.1735 18.4965C2.16738 17.4904 1.36928 16.2959 0.824765 14.9814C0.280256 13.6668 1.06012e-08 12.2579 0 10.835C-1.06012e-08 9.41213 0.280256 8.00319 0.824765 6.68862C1.36927 5.37406 2.16738 4.17962 3.1735 3.1735C4.17962 2.16738 5.37406 1.36927 6.68862 0.824765C8.00319 0.280256 9.41213 -1.06012e-08 10.835 0C12.2579 1.06012e-08 13.6668 0.280256 14.9814 0.824765C16.2959 1.36928 17.4904 2.16738 18.4965 3.1735C20.5285 5.20545 21.67 7.96138 21.67 10.835C21.67 13.7086 20.5285 16.4645 18.4965 18.4965C16.4645 20.5285 13.7086 21.67 10.835 21.67C7.96138 21.67 5.20545 20.5285 3.1735 18.4965ZM8.16695 6.73135C7.9744 6.55193 7.71972 6.45425 7.45657 6.45889C7.19342 6.46353 6.94234 6.57014 6.75624 6.75624C6.57014 6.94234 6.46353 7.19342 6.45889 7.45657C6.45425 7.71972 6.55193 7.9744 6.73135 8.16695L9.3994 10.835L6.73135 13.503C6.63155 13.596 6.55151 13.7082 6.49599 13.8328C6.44047 13.9574 6.41062 14.0919 6.40822 14.2283C6.40581 14.3647 6.4309 14.5001 6.48198 14.6266C6.53307 14.7531 6.60911 14.868 6.70556 14.9644C6.80202 15.0609 6.91691 15.1369 7.04339 15.188C7.16987 15.2391 7.30535 15.2642 7.44173 15.2618C7.57812 15.2594 7.71262 15.2295 7.83722 15.174C7.96182 15.1185 8.07396 15.0384 8.16695 14.9387L10.835 12.2706L13.503 14.9387C13.596 15.0384 13.7082 15.1185 13.8328 15.174C13.9574 15.2295 14.0919 15.2594 14.2283 15.2618C14.3647 15.2642 14.5001 15.2391 14.6266 15.188C14.7531 15.1369 14.868 15.0609 14.9644 14.9644C15.0609 14.868 15.1369 14.7531 15.188 14.6266C15.2391 14.5001 15.2642 14.3647 15.2618 14.2283C15.2594 14.0919 15.2295 13.9574 15.174 13.8328C15.1185 13.7082 15.0384 13.596 14.9387 13.503L12.2706 10.835L14.9387 8.16695C15.0384 8.07396 15.1185 7.96182 15.174 7.83722C15.2295 7.71262 15.2594 7.57812 15.2618 7.44173C15.2642 7.30535 15.2391 7.16987 15.188 7.04339C15.1369 6.91691 15.0609 6.80202 14.9644 6.70556C14.868 6.60911 14.7531 6.53307 14.6266 6.48198C14.5001 6.4309 14.3647 6.40581 14.2283 6.40822C14.0919 6.41062 13.9574 6.44047 13.8328 6.49599C13.7082 6.55151 13.596 6.63155 13.503 6.73135L10.835 9.3994L8.16695 6.73135Z"
+              fill="#FB1919"
+            />
+          </svg>
+        </ToastComponent>
+      )}
+      {showToastDeleteFailed && (
+        <ToastComponent
+          className="absolute bottom-[6%] right-[8%]"
+          text="Gagal menghapus admin."
+          onDismiss={() => setShowToastDeleteFailed(false)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="22"
+            height="22"
+            viewBox="0 0 22 22"
+            fill="none"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M3.1735 18.4965C2.16738 17.4904 1.36928 16.2959 0.824765 14.9814C0.280256 13.6668 1.06012e-08 12.2579 0 10.835C-1.06012e-08 9.41213 0.280256 8.00319 0.824765 6.68862C1.36927 5.37406 2.16738 4.17962 3.1735 3.1735C4.17962 2.16738 5.37406 1.36927 6.68862 0.824765C8.00319 0.280256 9.41213 -1.06012e-08 10.835 0C12.2579 1.06012e-08 13.6668 0.280256 14.9814 0.824765C16.2959 1.36928 17.4904 2.16738 18.4965 3.1735C20.5285 5.20545 21.67 7.96138 21.67 10.835C21.67 13.7086 20.5285 16.4645 18.4965 18.4965C16.4645 20.5285 13.7086 21.67 10.835 21.67C7.96138 21.67 5.20545 20.5285 3.1735 18.4965ZM8.16695 6.73135C7.9744 6.55193 7.71972 6.45425 7.45657 6.45889C7.19342 6.46353 6.94234 6.57014 6.75624 6.75624C6.57014 6.94234 6.46353 7.19342 6.45889 7.45657C6.45425 7.71972 6.55193 7.9744 6.73135 8.16695L9.3994 10.835L6.73135 13.503C6.63155 13.596 6.55151 13.7082 6.49599 13.8328C6.44047 13.9574 6.41062 14.0919 6.40822 14.2283C6.40581 14.3647 6.4309 14.5001 6.48198 14.6266C6.53307 14.7531 6.60911 14.868 6.70556 14.9644C6.80202 15.0609 6.91691 15.1369 7.04339 15.188C7.16987 15.2391 7.30535 15.2642 7.44173 15.2618C7.57812 15.2594 7.71262 15.2295 7.83722 15.174C7.96182 15.1185 8.07396 15.0384 8.16695 14.9387L10.835 12.2706L13.503 14.9387C13.596 15.0384 13.7082 15.1185 13.8328 15.174C13.9574 15.2295 14.0919 15.2594 14.2283 15.2618C14.3647 15.2642 14.5001 15.2391 14.6266 15.188C14.7531 15.1369 14.868 15.0609 14.9644 14.9644C15.0609 14.868 15.1369 14.7531 15.188 14.6266C15.2391 14.5001 15.2642 14.3647 15.2618 14.2283C15.2594 14.0919 15.2295 13.9574 15.174 13.8328C15.1185 13.7082 15.0384 13.596 14.9387 13.503L12.2706 10.835L14.9387 8.16695C15.0384 8.07396 15.1185 7.96182 15.174 7.83722C15.2295 7.71262 15.2594 7.57812 15.2618 7.44173C15.2642 7.30535 15.2391 7.16987 15.188 7.04339C15.1369 6.91691 15.0609 6.80202 14.9644 6.70556C14.868 6.60911 14.7531 6.53307 14.6266 6.48198C14.5001 6.4309 14.3647 6.40581 14.2283 6.40822C14.0919 6.41062 13.9574 6.44047 13.8328 6.49599C13.7082 6.55151 13.596 6.63155 13.503 6.73135L10.835 9.3994L8.16695 6.73135Z"
+              fill="#FB1919"
+            />
+          </svg>
+        </ToastComponent>
+      )}
     </AdminLayout>
   );
 }
