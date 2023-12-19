@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import IconNotif from "./Icons/IconNotif";
 import IconClose from "./Icons/IconClose";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { SWRResponse } from "swr";
+import useSWR from "swr";
 
 export interface CounterProps {
   counter?: number | undefined;
@@ -29,30 +33,80 @@ const cancels: Cancel[] = [
 ];
 
 export interface Expired {
-  id: number;
+  id: string;
   nameProduct: string;
   date: string;
   desk: string;
 }
 
-const expireds: Expired[] = [
-  {
-    id: 1,
-    nameProduct: "Indomie Bawang",
-    date: "12 - 10 - 2023",
-    desk: `Produk ini memiliki tersisa tenggat waktu kadaluarsa selama 14 hari lagi.`,
-  },
-  {
-    id: 2,
-    nameProduct: "Sarimi",
-    date: "12 - 10 - 2023",
-    desk: `Produk ini memiliki tersisa tenggat waktu kadaluarsa selama 14 hari lagi.`,
-  },
+let expireds: Expired[] = [
+  // {
+  //   id: 1,
+  //   nameProduct: "Indomie Bawang",
+  //   date: "12 - 10 - 2023",
+  //   desk: `Produk ini memiliki tersisa tenggat waktu kadaluarsa selama 14 hari lagi.`,
+  // },
+  // {
+  //   id: 2,
+  //   nameProduct: "Sarimi",
+  //   date: "12 - 10 - 2023",
+  //   desk: `Produk ini memiliki tersisa tenggat waktu kadaluarsa selama 14 hari lagi.`,
+  // },
 ];
 
-const Notifikasi = ({ counter = 15 }: CounterProps) => {
+const Notifikasi = ({ counter = undefined }: CounterProps) => {
   const [activeTab, setActiveTab] = useState("notifikasi");
   const [isModalVisible, setModalVisible] = useState(false);
+
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
+
+  // const {
+  //   data,
+  //   error,
+  //   isLoading,
+  // }: SWRResponse<any, any, boolean> = useSWR(
+  //   `/notification/invoice-delete-request`,
+  //   (url) =>
+  //     axiosPrivate
+  //       .get(url, {
+  //         headers: {
+  //           Authorization: `Bearer ${accessToken}`,
+  //         },
+  //       })
+  //       .then((res) => res.data?.data)
+  // );
+
+  const {
+    data,
+    error,
+    isLoading,
+  }: SWRResponse<any, any, boolean> = useSWR(
+    `/notification/product-expired-date`,
+    (url) =>
+      axiosPrivate
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => {
+          expireds = res.data.data.map((item: any) => {
+            const date: Date = new Date(item.expired_at);
+            const year: string = date.getFullYear().toString();
+            const month: string = date.getMonth().toString();
+            const day: string = date.getDate().toString();
+            const dateNow: Date = new Date();
+            return {
+              id: item.product.id,
+              nameProduct: item.product.name,
+              date: `${day} - ${month} - ${year}`,
+              desk: `Produk ini memiliki tersisa tenggat waktu kadaluarsa selama ${parseInt(day) - dateNow.getDate()} hari lagi.`,
+            };
+          });
+          // return res.data?.data
+        })
+  );
 
   const handleTabClick = (
     tab: string,

@@ -4,25 +4,48 @@ import Head from "next/head";
 import LoginAdminLayout from "../../../components/loginAdminLayout";
 import HelperLogin from "@/components/helperLogin";
 import OtpInput from "react18-input-otp";
+import { axiosInstance } from "@/utils/axios";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { useRouter } from "next/navigation";
 
 export default function LoginKasir() {
-  const [helper, setHelper] = React.useState(
-    "Kode kasir yang di inputkan tidak sesuai!"
-  );
-  const [otp, setOtp] = useState("");
+  const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
+  const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
+  const [imageProfile, setImageProfile] = useLocalStorage("image", "");
+  const [username, setUsername] = useLocalStorage("username", "");
+  const [helper, setHelper] = React.useState('');
+  const [otp, setOtp] = useState<string>("");
+  const router = useRouter();
+
 
   const handleChange = (enteredOtp: any) => {
     setOtp(enteredOtp);
   };
 
-  const handleLogin = (e: any) => {
+  const handleLogin = async (e: any) => {
     e.preventDefault();
-    // Add your login logic here, using the 'otp' state value
-    const kodeKasir = otp;
-    console.log("OTP value:", kodeKasir);
-    console.log("Tipe Data:", typeof kodeKasir);
+    if (otp.length !== 6) {
+      setHelper("OTP harus 6 digit");
+      return;
+    }
 
-    alert(kodeKasir);
+    try{
+      const response = await axiosInstance.post("/auth/cashier/login", { code: otp });
+      setAccessToken(response.data.data.access_token);
+      setRefreshToken(response.data.data.refresh_token);
+      setImageProfile(response.data.data.cashier.image);
+      setUsername(response.data.data.cashier.username);
+      router.push("/pos");
+    } catch (e: any) {
+      setHelper(e?.response?.data?.message);
+      console.log(e);
+    }
+    // Add your login logic here, using the 'otp' state value
+    // const kodeKasir = otp;
+    // console.log("OTP value:", kodeKasir);
+    // console.log("Tipe Data:", typeof kodeKasir);
+    
+
     setOtp("");
     // You can replace the console.log with your login API call or other logic
   };
@@ -48,6 +71,7 @@ export default function LoginKasir() {
                   value={otp}
                   onChange={handleChange}
                   numInputs={6}
+                  shouldAutoFocus={true}
                   containerStyle="gap-x-3 items-center justify-center mb-2 rounded-lg"
                   inputStyle="w-40 rounded-md aspect-square text-center text-4xl  font-semibold p-4 focus:border-[#FF6B35] focus:ring-[#FF6B35] mt-4 rounded-md"
                   separator={<span> </span>}
