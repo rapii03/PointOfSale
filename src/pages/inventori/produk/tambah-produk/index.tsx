@@ -13,6 +13,7 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import { useEdgeStore } from "@/lib/edgestore";
 import { useRouter } from "next/router";
 import CustomSelect from "@/components/multipleSelect";
+import ToastComponent from "@/components/Toast";
 
 interface Unit {
   id: string;
@@ -47,6 +48,8 @@ interface ListUnit {
 }
 
 export default function FormTambahProdukAdminPage() {
+  const [showToast, setShowToast] = useState(false);
+  const [showToastFailed, setShowToastFailed] = useState(false);
   const crumbs = [
     { text: "Home", href: "/dashboard-admin" },
     { text: "Inventori", href: "/inventori/produk" },
@@ -68,7 +71,6 @@ export default function FormTambahProdukAdminPage() {
   const { edgestore } = useEdgeStore();
   const [file, setFile] = useState<File | null>(null);
   const [fileNotReady, setFileNotReady] = useState<boolean>(false);
-
   const handleFileUpload = async (file: File) => {
     if (file) {
       try {
@@ -153,7 +155,7 @@ export default function FormTambahProdukAdminPage() {
     dataForm.name = data.name;
     delete dataForm.categories;
     delete dataForm.expired_at;
-    if(selectedKategori.length > 0){
+    if (selectedKategori.length > 0) {
       dataForm.categories = selectedKategori;
     }
     const url = await handleFileUpload(file as File);
@@ -161,9 +163,16 @@ export default function FormTambahProdukAdminPage() {
     if (data.expired_at) {
       dataForm.expired_at = new Date(data.expired_at).toISOString();
     }
-    await axiosPrivate.post("/product/group/add", dataForm);
-    router.push("/inventori/produk");
-    console.log(dataForm);
+    try{
+      await axiosPrivate.post("/product/group/add", dataForm);
+    }catch(e){
+      setShowToastFailed(true);
+      return;
+    }
+    setShowToast(true);
+    setTimeout(() => {
+      router.push("/inventori/produk");
+    },2000)
   };
 
   const onSubmitModal: SubmitHandler<Group> = (data) => {
@@ -197,16 +206,18 @@ export default function FormTambahProdukAdminPage() {
     });
   };
 
-  const handleChange = (selectedOption : any) => {
+  const handleChange = (selectedOption: any) => {
     const select = selectedOption.map((item: any) => item.value);
     setSelectedKategori(select);
   };
 
-  let pilihan : any = [];
+  let pilihan: any = [];
 
-  {dataKategori?.data?.map((item) => (
-    pilihan.push({ value: item.id, label: item.name })
-  ))}
+  {
+    dataKategori?.data?.map((item) =>
+      pilihan.push({ value: item.id, label: item.name })
+    );
+  }
 
   return (
     <div>
@@ -257,7 +268,6 @@ export default function FormTambahProdukAdminPage() {
                       <option value={item.id}>{item.name}</option>
                     ))}
                   </select> */}
-                  
                 </div>
               </div>
               <div className="flex w-full gap-5">
@@ -285,6 +295,7 @@ export default function FormTambahProdukAdminPage() {
                           id="file-upload"
                           type="file"
                           className="hidden"
+                          accept=".png, .jpg, .jpeg"
                           onChange={(e) => {
                             setFile(e.target.files?.[0] ?? null);
                           }}
@@ -292,10 +303,14 @@ export default function FormTambahProdukAdminPage() {
                         Unggah
                       </label>
                       <p className="text-md text-[#B7B7B7]">
-                        {file === null && !fileNotReady ?  "Unggah Gambar" : file?.name}
+                        {file === null && !fileNotReady
+                          ? "Unggah Gambar"
+                          : file?.name}
                       </p>
                       <p className="text-md text-red-500">
-                        {file === null && fileNotReady ? "Gambar wajib diisi" : ''}
+                        {file === null && fileNotReady
+                          ? "Gambar wajib diisi"
+                          : ""}
                       </p>
                     </div>
                   </div>
@@ -498,6 +513,47 @@ export default function FormTambahProdukAdminPage() {
               </Modal.Body>
             </Modal>
           </div>
+          {showToast && (
+            <ToastComponent
+              text="Berhasil menambahkan item."
+              onDismiss={() => setShowToast(false)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="26"
+                height="26"
+                viewBox="0 0 26 26"
+                fill="none"
+              >
+                <path
+                  d="M13.0013 2.16626C7.0213 2.16626 2.16797 7.01959 2.16797 12.9996C2.16797 18.9796 7.0213 23.8329 13.0013 23.8329C18.9813 23.8329 23.8346 18.9796 23.8346 12.9996C23.8346 7.01959 18.9813 2.16626 13.0013 2.16626ZM10.0655 17.6471L6.1763 13.7579C5.7538 13.3354 5.7538 12.6529 6.1763 12.2304C6.5988 11.8079 7.2813 11.8079 7.7038 12.2304L10.8346 15.3504L18.288 7.89709C18.7105 7.47459 19.393 7.47459 19.8155 7.89709C20.238 8.31959 20.238 9.00209 19.8155 9.42459L11.593 17.6471C11.1813 18.0696 10.488 18.0696 10.0655 17.6471Z"
+                  fill="#10B981"
+                />
+              </svg>
+            </ToastComponent>
+          )}
+          {showToastFailed && (
+            <ToastComponent
+              className="absolute bottom-[6%] right-[8%]"
+              text="Gagal menambahkan item."
+              onDismiss={() => setShowToastFailed(false)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="22"
+                viewBox="0 0 22 22"
+                fill="none"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M3.1735 18.4965C2.16738 17.4904 1.36928 16.2959 0.824765 14.9814C0.280256 13.6668 1.06012e-08 12.2579 0 10.835C-1.06012e-08 9.41213 0.280256 8.00319 0.824765 6.68862C1.36927 5.37406 2.16738 4.17962 3.1735 3.1735C4.17962 2.16738 5.37406 1.36927 6.68862 0.824765C8.00319 0.280256 9.41213 -1.06012e-08 10.835 0C12.2579 1.06012e-08 13.6668 0.280256 14.9814 0.824765C16.2959 1.36928 17.4904 2.16738 18.4965 3.1735C20.5285 5.20545 21.67 7.96138 21.67 10.835C21.67 13.7086 20.5285 16.4645 18.4965 18.4965C16.4645 20.5285 13.7086 21.67 10.835 21.67C7.96138 21.67 5.20545 20.5285 3.1735 18.4965ZM8.16695 6.73135C7.9744 6.55193 7.71972 6.45425 7.45657 6.45889C7.19342 6.46353 6.94234 6.57014 6.75624 6.75624C6.57014 6.94234 6.46353 7.19342 6.45889 7.45657C6.45425 7.71972 6.55193 7.9744 6.73135 8.16695L9.3994 10.835L6.73135 13.503C6.63155 13.596 6.55151 13.7082 6.49599 13.8328C6.44047 13.9574 6.41062 14.0919 6.40822 14.2283C6.40581 14.3647 6.4309 14.5001 6.48198 14.6266C6.53307 14.7531 6.60911 14.868 6.70556 14.9644C6.80202 15.0609 6.91691 15.1369 7.04339 15.188C7.16987 15.2391 7.30535 15.2642 7.44173 15.2618C7.57812 15.2594 7.71262 15.2295 7.83722 15.174C7.96182 15.1185 8.07396 15.0384 8.16695 14.9387L10.835 12.2706L13.503 14.9387C13.596 15.0384 13.7082 15.1185 13.8328 15.174C13.9574 15.2295 14.0919 15.2594 14.2283 15.2618C14.3647 15.2642 14.5001 15.2391 14.6266 15.188C14.7531 15.1369 14.868 15.0609 14.9644 14.9644C15.0609 14.868 15.1369 14.7531 15.188 14.6266C15.2391 14.5001 15.2642 14.3647 15.2618 14.2283C15.2594 14.0919 15.2295 13.9574 15.174 13.8328C15.1185 13.7082 15.0384 13.596 14.9387 13.503L12.2706 10.835L14.9387 8.16695C15.0384 8.07396 15.1185 7.96182 15.174 7.83722C15.2295 7.71262 15.2594 7.57812 15.2618 7.44173C15.2642 7.30535 15.2391 7.16987 15.188 7.04339C15.1369 6.91691 15.0609 6.80202 14.9644 6.70556C14.868 6.60911 14.7531 6.53307 14.6266 6.48198C14.5001 6.4309 14.3647 6.40581 14.2283 6.40822C14.0919 6.41062 13.9574 6.44047 13.8328 6.49599C13.7082 6.55151 13.596 6.63155 13.503 6.73135L10.835 9.3994L8.16695 6.73135Z"
+                  fill="#FB1919"
+                />
+              </svg>
+            </ToastComponent>
+          )}
         </AdminLayout>
       </main>
     </div>
