@@ -1,6 +1,6 @@
 import React from "react";
 
-const TesInvoice = () => {
+const Invoice = React.forwardRef((props, ref: React.Ref<any>) => {
   const produk: any = [
     { nama: "Indomie", satuan: 3, harga: "3.000", totalHarga: "15.000" },
     { nama: "Sedap", satuan: 3, harga: "3.000", totalHarga: "15.000" },
@@ -19,7 +19,10 @@ const TesInvoice = () => {
   const cash = "200.000";
   const change = "10.000";
   return (
-    <div className="flex flex-col w-[300px] h-[631px] px-[23px] py-[17px] items-center ">
+    <div
+      className="flex flex-col w-[300px] h-[631px] px-[23px] py-[17px] items-center "
+      ref={ref}
+    >
       <div className="flex flex-col items-center space-y-1">
         <p className="text-[25px] text-[#FF6B35] font-bold">Yangs Grosir</p>
         <p className="text-[15px] text-[#FF6B35] font-normal ">
@@ -45,7 +48,10 @@ const TesInvoice = () => {
         <div className="flex">
           <div>
             {produk.map((produk: any) => (
-              <p className="text-[9.935px] font-mono text-[#6D7278]">
+              <p
+                key={produk.nama}
+                className="text-[9.935px] font-mono text-[#6D7278]"
+              >
                 {produk.nama}
               </p>
             ))}
@@ -55,7 +61,7 @@ const TesInvoice = () => {
         <div className="flex flex-col">
           <div>
             {produk.map((produk: any) => (
-              <div className="flex space-x-1">
+              <div key={produk.nama} className="flex space-x-1">
                 <p className="text-[9.935px] font-mono ">{produk.satuan}pcs</p>
                 <p className="text-[9.935px] font-mono ">{produk.harga}</p>
                 <p className="text-[9.935px] font-mono ">{produk.totalHarga}</p>
@@ -110,6 +116,6 @@ const TesInvoice = () => {
       </div>
     </div>
   );
-};
+});
 
-export default TesInvoice;
+export default Invoice;
