@@ -7,7 +7,11 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useReactToPrint } from "react-to-print";
-import Invoice from "@/components/Invoice"
+import Invoice from "@/components/Invoice";
+import useSWR from "swr";
+import { SWRResponse, mutate } from "swr";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 export default function Transaksi() {
   const paginationTheme = {
@@ -44,61 +48,90 @@ export default function Transaksi() {
     "Aksi",
   ];
 
-  interface kelolaTransaksi {
-    id?: number;
-    invoice: string;
-    tanggal: string;
-    produk: string;
-    total: number;
+  interface Transaksi {
+    id?: string;
+    sum : number;
+    code: string;
+    create_at: string;
+    product: number;
     status: string;
   }
+
+  interface DataTransaksi {
+    items: Transaksi[];
+    meta: any;
+    from_date: string;
+    to_date: string;
+  }
+
   //Format Data Buat Transaksi
-  const dataTransaksi: kelolaTransaksi[] = [
-    {
-      id: 1,
-      invoice: "#INV1214",
-      tanggal: "10-11-2023",
-      produk: "Mie",
-      total: 10,
-      status: "Sukses",
-    },
+  // let dataTransaksi: Transaksi[] = [
+  //   {
+  //     id: 1,
+  //     invoice: "#INV1214",
+  //     tanggal: "10-11-2023",
+  //     produk: "Mie",
+  //     total: 10,
+  //     status: "Sukses",
+  //   },
 
-    {
-      id: 2,
-      invoice: "#INV1214",
-      tanggal: "10-11-2023",
-      produk: "Mie",
-      total: 10,
-      status: "Dibatalkan",
-    },
+  //   {
+  //     id: 2,
+  //     invoice: "#INV1214",
+  //     tanggal: "10-11-2023",
+  //     produk: "Mie",
+  //     total: 10,
+  //     status: "Dibatalkan",
+  //   },
 
-    {
-      id: 3,
-      invoice: "#INV1214",
-      tanggal: "10-11-2023",
-      produk: "Mie",
-      total: 10,
-      status: "Pending",
-    },
-    {
-      id: 4,
-      invoice: "#INV1214",
-      tanggal: "10-11-2023",
-      produk: "Mie",
-      total: 10,
-      status: "Sukses",
-    },
-    {
-      id: 5,
-      invoice: "#INV1214",
-      tanggal: "10-11-2023",
-      produk: "Mie",
-      total: 10,
-      status: "Pending",
-    },
-  ];
+  //   {
+  //     id: 3,
+  //     invoice: "#INV1214",
+  //     tanggal: "10-11-2023",
+  //     produk: "Mie",
+  //     total: 10,
+  //     status: "Pending",
+  //   },
+  //   {
+  //     id: 4,
+  //     invoice: "#INV1214",
+  //     tanggal: "10-11-2023",
+  //     produk: "Mie",
+  //     total: 10,
+  //     status: "Sukses",
+  //   },
+  //   {
+  //     id: 5,
+  //     invoice: "#INV1214",
+  //     tanggal: "10-11-2023",
+  //     produk: "Mie",
+  //     total: 10,
+  //     status: "Pending",
+  //   },
+  // ];
 
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState<string | undefined>(undefined);
+  const [endDate, setEndDate] = useState<string | undefined>(undefined);
+
+  const { data, error, isLoading }: SWRResponse<DataTransaksi, any, boolean> =
+    useSWR(`/invoice/all?page=${currentPage}`, (url) =>
+      axiosPrivate
+        .post(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          data: {
+            from : startDate,
+            to : endDate,
+          }
+        })
+        .then((res) => res.data?.data)
+    );
+
   const onPageChange = (page: number) => setCurrentPage(page);
 
   const { control, handleSubmit, setValue, watch } = useForm();
@@ -116,10 +149,13 @@ export default function Transaksi() {
 
   const onSubmit = (data: any) => {
     // Menyimpan data atau melakukan tindakan lainnya
-    const startDate = new Date(data.startDate);
-    const endDate = new Date(data.endDate);
-    console.log("Start Date :", startDate);
-    console.log("End Date :", endDate);
+    const startDate = new Date(data.startDate).toLocaleString('en-US',{timeZone: 'Asia/Jakarta', timeZoneName: 'short'});
+    const endDate = new Date(data.endDate).toLocaleString('en-US',{timeZone: 'Asia/Jakarta', timeZoneName: 'short'});
+    setStartDate(startDate);
+    setEndDate(endDate);
+    console.log(startDate, endDate);
+    // mutate(`/invoice/all?page=${currentPage}`);
+
   };
 
   // Memonitor perubahan nilai input dan memicu onSubmit
@@ -127,14 +163,23 @@ export default function Transaksi() {
     if (startDateValue && endDateValue) {
       handleSubmit(onSubmit)();
     }
+    if(!startDateValue){
+      setStartDate(undefined);
+      setEndDate(undefined);
+    }
+    if(!endDateValue){
+      setStartDate(undefined);
+      setEndDate(undefined);
+    }
+    console.log(startDate, endDate);
   }, [startDateValue, endDateValue, handleSubmit, onSubmit]);
 
   // function print
   const componentRef = useRef();
 
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-  });
+  // const handlePrint = useReactToPrint({
+  //   content: () => componentRef.current,
+  // });
 
   return (
     <AdminLayout>
@@ -190,7 +235,8 @@ export default function Transaksi() {
         </div>
         <button
           className="w-[9.21rem] h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-2 text-sm"
-          onClick={handlePrint}
+          // onClick={handlePrint}
+          onClick={() => console.log(data)}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -240,57 +286,57 @@ export default function Transaksi() {
             </tr>
           </thead>
           <tbody>
-            {dataTransaksi.map((col, colIndex) => (
+            {data?.items.map((item, index) => (
               <tr>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
-                    {colIndex + 1}
+                    {index + 1}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.invoice}
+                    {item.code}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.tanggal}
+                    {item.create_at.split("T")[0]}
                   </div>
                 </td>
                 <td className="border-collapse p2 px-0 text-center">
                   <div className="flex justify-start items-center h-12 border-b">
-                    {col.produk}
+                    {item.product}
                   </div>
                 </td>
                 <td className="border-collapse p2 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.total}
+                    Rp. {item.sum}
                   </div>
                 </td>
                 <td className="border-collapse p2 px-0 text-center">
                   <div
                     className={
-                      col.status === "Sukses"
+                      item.status === "success"
                         ? "flex justify-start items-center h-12 border-b text-[#10B981]"
-                        : col.status === "Dibatalkan"
+                        : item.status === "Dibatalkan"
                         ? "flex justify-start items-center h-12 border-b text-[#FB1919]"
                         : "flex justify-start items-center h-12 border-b "
                     }
                   >
-                    {col.status}
+                    {item.status}
                   </div>
                 </td>
-                {col.status != "Pending" && (
+                {item.status != "pending" && (
                   <td className="border-collapse p2 px-0 text-center">
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                       <button
                         className="text-[#FF6B35] text-md"
-                        onClick={handlePrint}
+                        // onClick={handlePrint}
                       >
                         Print
                       </button>
                       <Link
-                        href={`/transaksi/detail-transaksi-${col.id}`}
+                        href={`/transaksi/detail-transaksi-${item.id}`}
                         className="text-blue-700 text-md"
                       >
                         Detail
@@ -298,11 +344,11 @@ export default function Transaksi() {
                     </div>
                   </td>
                 )}
-                {col.status == "Pending" && (
+                {item.status == "pending" && (
                   <td className="border-collapse p2 px-0 text-center">
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                       <Link
-                        href={`/transaksi/pending-detail-transaksi-${col.id}`}
+                        href={`/transaksi/pending-detail-transaksi-${item.id}`}
                         className="text-blue-700 text-md"
                       >
                         Detail
@@ -316,16 +362,18 @@ export default function Transaksi() {
         </table>
       </div>
       <div className="flex overflow-x-auto sm:justify-end">
-        <Pagination
-          theme={paginationTheme}
-          layout="pagination"
-          currentPage={currentPage}
-          totalPages={10}
-          onPageChange={onPageChange}
-          previousLabel=""
-          nextLabel=""
-          showIcons
-        />
+        {data?.meta?.totalPages > 1 && (
+          <Pagination
+            theme={paginationTheme}
+            layout="pagination"
+            currentPage={currentPage}
+            totalPages={data?.meta?.totalPages}
+            onPageChange={onPageChange}
+            previousLabel=""
+            nextLabel=""
+            showIcons
+          />
+        )}
       </div>
 
       {/* Edit Modal */}
