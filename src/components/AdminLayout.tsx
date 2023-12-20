@@ -22,8 +22,11 @@ const AdminLayout = ({ children }: Props) => {
   
   useEffect(() => {
     const result: boolean = checkAuth(refreshToken);
-    redirectLogin(!result || !username || (nickname !== "OPM" && nickname !== "AANG"), router);
-    setCheck(result);
+    if (!result || !username || (nickname !== "OPM" && nickname !== "AANG")) {
+      router.push('/login');
+    } else {
+      setCheck(true);
+    }
   })
 
   if (!check) {

@@ -10,7 +10,10 @@ const InputCash = ({ value, onChange}: InputCashProps) => {
   const [formattedValue, setFormattedValue] = useState(`Rp ${value.toLocaleString("id-ID")}`);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const inputValue = event.target.value.replace(/\D/g, "");
+    let inputValue = event.target.value.replace(/\D/g, "");
+    if (!inputValue) {
+      inputValue = "0";
+    }
     const numericValue = parseInt(inputValue, 10);
 
     setFormattedValue(inputValue !== "" ? `Rp ${numericValue.toLocaleString("id-ID")}` : "");

@@ -13,19 +13,23 @@ export default function LoginKasir() {
   const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
   const [imageProfile, setImageProfile] = useLocalStorage("image", "");
   const [username, setUsername] = useLocalStorage("username", "");
+  const [nickname, setNickname] = useLocalStorage("nickname", "");
   const [helper, setHelper] = React.useState('');
   const [otp, setOtp] = useState<string>("");
   const router = useRouter();
 
 
   const handleChange = (enteredOtp: any) => {
+    if (enteredOtp.length === 6) {
+      setHelper('');
+    }   
     setOtp(enteredOtp);
   };
 
   const handleLogin = async (e: any) => {
     e.preventDefault();
     if (otp.length !== 6) {
-      setHelper("OTP harus 6 digit");
+      setHelper("PIN harus 6 digit");
       return;
     }
 
@@ -35,19 +39,13 @@ export default function LoginKasir() {
       setRefreshToken(response.data.data.refresh_token);
       setImageProfile(response.data.data.cashier.image);
       setUsername(response.data.data.cashier.username);
+      setNickname("");
       router.push("/pos");
     } catch (e: any) {
       setHelper(e?.response?.data?.message);
       console.log(e);
     }
-    // Add your login logic here, using the 'otp' state value
-    // const kodeKasir = otp;
-    // console.log("OTP value:", kodeKasir);
-    // console.log("Tipe Data:", typeof kodeKasir);
-    
-
     setOtp("");
-    // You can replace the console.log with your login API call or other logic
   };
 
   return (

@@ -13,6 +13,12 @@ import { Modal, Pagination } from "flowbite-react";
 import DateComponent from '@/components/Pos/DateComponent';
 import TimeComponent from '@/components/Pos/TimeComponent';
 import Searchbar from '@/components/Searchbar';
+import loading from '@/components/loading';
+import useAxiosPrivate from '@/hooks/useAxiosPrivate';
+import useLocalStorage from '@/hooks/useLocalStorage';
+import { useRouter } from 'next/navigation';
+import useSWR, { SWRResponse } from 'swr';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
 
 
@@ -52,96 +58,120 @@ export interface Product {
     waktu?: string; // Add this line for 'waktu' property
 }
 
-const dummyProducts: Product[] = [
-    {
-        id: "1",
-        image: 'assets/pos/indomie.png',
-        name: 'Indomie', // Unique name
-        group: [
-            { id: "1", Unit: 'Pcs', price: 3500, stock: 99 },
-            { id: "2", Unit: 'Dus', price: 50000, stock: 50 },
-        ],
-    },
-    {
-        id: "2",
-        image: 'assets/pos/indomie.png',
-        name: 'Susu', // Unique name
-        group: [
-            { id: "1", Unit: 'Pcs', price: 5500, stock: 21 },
-            { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
-        ],
-    },
-    {
-        id: "3",
-        image: 'assets/pos/indomie.png',
-        name: 'Bimoli', // Unique name
-        group: [
-            { id: "1", Unit: 'Pcs', price: 5500, stock: 21 },
-            { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
-        ],
-    },
-    {
-        id: "4",
-        image: 'assets/pos/indomie.png',
-        name: 'Kukubima', // Unique name
-        group: [
-            { id: "1", Unit: 'Pcs', price: 3000, stock: 21 },
-            { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
-        ],
-    },
+let dummyProducts: Product[] = [
+    // {
+    //     id: "1",
+    //     image: 'assets/pos/indomie.png',
+    //     name: 'Indomie', // Unique name
+    //     group: [
+    //         { id: "1", Unit: 'Pcs', price: 3500, stock: 99 },
+    //         { id: "2", Unit: 'Dus', price: 50000, stock: 50 },
+    //     ],
+    // },
+    // {
+    //     id: "2",
+    //     image: 'assets/pos/indomie.png',
+    //     name: 'Susu', // Unique name
+    //     group: [
+    //         { id: "1", Unit: 'Pcs', price: 5500, stock: 21 },
+    //         { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
+    //     ],
+    // },
+    // {
+    //     id: "3",
+    //     image: 'assets/pos/indomie.png',
+    //     name: 'Bimoli', // Unique name
+    //     group: [
+    //         { id: "1", Unit: 'Pcs', price: 5500, stock: 21 },
+    //         { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
+    //     ],
+    // },
+    // {
+    //     id: "4",
+    //     image: 'assets/pos/indomie.png',
+    //     name: 'Kukubima', // Unique name
+    //     group: [
+    //         { id: "1", Unit: 'Pcs', price: 3000, stock: 21 },
+    //         { id: "2", Unit: 'Dus', price: 70000, stock: 9 },
+    //     ],
+    // },
     // Add more dummy data as needed
 ];
 
-const productsDraft = [
-    {
-        id: '1',
-        invoice: 'INV123',
-        waktu: '10:00:00',
-        groupDraft: [
-            { id: '5', name: 'Bimoli', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3000 }] },
-            { id: '6', name: 'Sunlight', quantity: 2, group: [{ id: '1', Unit: 'Pcs', price: 4000 }] },
-        ],
-    },
-    {
-        id: '2',
-        invoice: 'INV124',
-        waktu: '10:00:00',
-        groupDraft: [
-            { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3500 },] },
-            { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '2', Unit: 'Dus', price: 50000 },] },
-            { id: '2', name: 'Susu', quantity: 2, group: [{ id: '2', Unit: 'Dus', price: 70000 }] },
-        ],
-    },
+let productsDraft: any[] = [
+    // {
+    //     id: '1',
+    //     invoice: 'INV123',
+    //     waktu: '10:00:00',
+    //     groupDraft: [
+    //         { id: '5', name: 'Bimoli', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3000 }] },
+    //         { id: '6', name: 'Sunlight', quantity: 2, group: [{ id: '1', Unit: 'Pcs', price: 4000 }] },
+    //     ],
+    // },
+    // {
+    //     id: '2',
+    //     invoice: 'INV124',
+    //     waktu: '10:00:00',
+    //     groupDraft: [
+    //         { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3500 },] },
+    //         { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '2', Unit: 'Dus', price: 50000 },] },
+    //         { id: '2', name: 'Susu', quantity: 2, group: [{ id: '2', Unit: 'Dus', price: 70000 }] },
+    //     ],
+    // },
     // Add more dummy data as needed
 ];
 
-const productsRiwayat = [
-    {
-        id: '1',
-        invoice: 'INV123',
-        waktu: '10:00:00',
-        groupRiwayat: [
-            { id: '5', name: 'Riwayat', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3000 }] },
-            { id: '6', name: 'Sunlight', quantity: 2, group: [{ id: '1', Unit: 'Pcs', price: 4000 }] },
-        ],
-    },
-    {
-        id: '2',
-        invoice: 'INV124',
-        waktu: '10:00:00',
-        groupRiwayat: [
-            { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3500 },] },
-            { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '2', Unit: 'Dus', price: 50000 },] },
-            { id: '2', name: 'Susu', quantity: 2, group: [{ id: '2', Unit: 'Dus', price: 70000 }] },
-        ],
-    },
+let productsRiwayat: any[] = [
+    // {
+    //     id: '1',
+    //     invoice: 'INV123',
+    //     waktu: '10:00:00',
+    //     groupRiwayat: [
+    //         { id: '5', name: 'Riwayat', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3000 }] },
+    //         { id: '6', name: 'Sunlight', quantity: 2, group: [{ id: '1', Unit: 'Pcs', price: 4000 }] },
+    //     ],
+    // },
+    // {
+    //     id: '2',
+    //     invoice: 'INV124',
+    //     waktu: '10:00:00',
+    //     groupRiwayat: [
+    //         { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3500 },] },
+    //         { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '2', Unit: 'Dus', price: 50000 },] },
+    //         { id: '2', name: 'Susu', quantity: 2, group: [{ id: '2', Unit: 'Dus', price: 70000 }] },
+    //     ],
+    // },
     // Add more dummy data as needed
 ];
 
 const Pos = () => {
-    const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
-    const [totalPrice, setTotalPrice] = useState<number>(0);
+    const [income, setIncome] = useState<number>(0);
     const [discount, setDiscount] = useState<number>(0);
+    const [totalPrice, setTotalPrice] = useState<number>(0);
+    const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+
+    // Loading 
+    const [isLoadingUser, setIsLoadingUser] = useState(true);
+    const [isLoadingCashOnHand, setIsLoadingCashOnHand] = useState(true);
+    
+    // Use
+    const router = useRouter();
+    const axiosPrivate = useAxiosPrivate();
+
+
+    // Use LocalStorage
+    const [image, setImage] = useLocalStorage("image", "");
+    const [nickname, setNickname] = useLocalStorage("nickname", "");
+    const [username, setUsername] = useLocalStorage("username", "");
+    const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
+    const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
+
+    // Var
+    const [code, setCode] = useState<string>("");
+    const [search, setSearch] = useState<string>("");
+    const [message, setMessage] = useState<string>("");
+    const [deleteId, setDeleteId] = useState<string>("");
+    const [invoiceCode, setInvoiceCode] = useState<string>("");
 
     const addToCart = (product: Product, selectedUnitId: string) => {
         console.log("Adding to cart:", product, selectedProducts);
@@ -216,13 +246,21 @@ const Pos = () => {
 
     // modal
     const [modalValue, setModalValue] = useState<number>(0);
-    const [isModalOpen, setIsModalOpen] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleModalChange = (value: number) => {
         setModalValue(value);
     };
 
-    const handleModalClose = () => {
+    const handleModalClose = async () => {
+        await axiosPrivate.post("/pos/cashier/cash-on-hand/set", {
+            cash_on_hand: modalValue.toString(),    
+        }, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            }
+        })
+        setIsLoadingCashOnHand(true);
         setIsModalOpen(false);
     };
 
@@ -235,23 +273,71 @@ const Pos = () => {
         }
     };
 
-    const handleDraft = () => {
-        console.log(selectedProducts)
+    const handleDraft = async () => {
+        const data = {
+            discount: discount.toString(),
+            items: selectedProducts.map((product) => ({ unit: product?.selectedUnitId, quantity: product?.quantity?.toString() }))
+        }
+        try {
+            if (deleteId !== "") {
+                await handleDeleteDraft();
+                setDeleteId("");
+            }
+            const response = await axiosPrivate.post('/pos/draft/create', data, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                }
+            })
+            setTimeout(() => {
+                alert(response.data.message);
+            }, 750);
+        } catch (e: any) {
+            console.error(e);
+        }
+        setIsLoadingCashOnHand(true);
+        deleteAllProducts();
     };
 
-    const handleBayar = () => {
-        console.log("Bayar");
-        setPaymentModalOpen(false)
-        deleteAllProducts()
+    const handleBayar = async () => {
+        const data = {
+            discount: discount.toString(),
+            items: selectedProducts.map((product) => ({ unit: product?.selectedUnitId, quantity: product?.quantity?.toString() }))
+        }
+        // console.log("Bayar", data);
+        try {
+            if (deleteId !== "") {
+                await handleDeleteDraft();
+                setDeleteId("");
+            }
+            const response = await axiosPrivate.post('/pos/invoice/create', data, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                }
+            })
+            setTimeout(() => {
+                alert(response.data.message);
+            }, 750);
+        } catch (error) {
+            console.error(error);
+        }
+        setIsLoadingCashOnHand(true);
+        setPaymentModalOpen(false);
+        deleteAllProducts();
     };
     // card
 
     // DRAFT
     const columnsDraft = ["Invoice", "Produk", "Waktu", "Aksi"];
+    const [draftIsLoading, setDraftIsLoading] = useState(true);
+    const [draftCount, setDraftCount] = useState(0);
+    const [maxPageDraft, setMaxPageDraft] = useState(1);
     const [cartProducts, setCartProducts] = useState<Product[]>([]);
     const [draftProducts, setDraftProducts] = useState<Product[]>(productsDraft);
-    const [currentPage, setCurrentPage] = useState(1);
-    const onPageChange = (page: number) => setCurrentPage(page);
+    const [currentPageDraft, setCurrentPageDraft] = useState(1);
+    const onPageChange = async (page: number) => {
+        setCurrentPageDraft(page)
+        setDraftIsLoading(true);
+    };
     const paginationTheme = {
         pages: {
             base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px border border-[#FF6B35] rounded-md",
@@ -327,7 +413,7 @@ const Pos = () => {
                 )
                 .filter((item): item is NonNullable<typeof item> => item !== null); // Type assertion
 
-            console.log("Adding items to the cart:", itemsToAdd);
+            // console.log("Adding items to the cart:", itemsToAdd);
             // Add the selected products to the cart
             setSelectedProducts((prevSelectedProducts) => [
                 ...prevSelectedProducts,
@@ -368,15 +454,37 @@ const Pos = () => {
         handleOpenDraft()
     }
 
-    const handleDeleteDraft = () => {
-        console.log("Delete");
+    const handleDeleteDraft = async () => {
+        console.log("Delete", deleteId);
+        try {
+            await axiosPrivate.delete("/pos/draft/delete", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                data: {
+                    id: deleteId,
+                },
+            })
+            setDeleteId("");
+        } catch (error) {
+            console.error(error);
+        }
         onCloseDeleteDraft();
         handleCloseDraft();
     };
     // DRAFT
 
     // RIWAYAT
+    const [riwayatIsLoading, setRiwayatIsLoading] = useState(true);
     const [modalRiwayat, setmodalRiwayat] = useState(false);
+    const [maxPageRiwayat, setMaxPageRiwayat] = useState(1);
+    const [currentPageRiwayat, setCurrentPageRiwayat] = useState(1);
+    const onPageChangeRiwayat = (page: number) => {
+        setCurrentPageRiwayat(page);
+        setRiwayatIsLoading(true);
+    };
+    const { register, handleSubmit } = useForm<{ code: string, message: string }>();
+
     const handleOpenRiwayat = () => {
         setmodalRiwayat(!modalRiwayat);
     };
@@ -390,19 +498,214 @@ const Pos = () => {
         handleCloseRiwayat()
     }
     function onCloseBatalRiwayat() {
+        setDeleteId("");
         setOpenBatalModal(false);
         handleOpenRiwayat()
     }
 
-    const handleKonfirmasi = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        console.log("Batal");
+    const handleKonfirmasi: SubmitHandler<any> = async (data: any) => {
+        data.id = deleteId;
+        // console.log("data", data);
+        try {
+            await axiosPrivate.patch("/pos/invoice/set-delete-request", data, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+        } catch (error: any) {
+            console.error(error);
+        }
+        setCode("");
+        setMessage("");
         onCloseBatalRiwayat();
         handleCloseRiwayat();
     };
 
-    // RIWAYAT
+    const handleLogout = () => {
+        setImage("");
+        setUsername("");
+        setAccessToken("");
+        setRefreshToken("");
+        router.push("/login");
+    }
 
+    const handleSearch = (e: any) => {
+        setSearch(e.target.value);
+        setCurrentPageDraft(1);
+    }
+
+
+    // All Products
+    const {
+        data,
+        error,
+        isLoading,
+      }: SWRResponse<any, any, boolean> = useSWR(
+        `/pos/product/all?search=${search}`,
+        (url) =>
+          axiosPrivate
+            .get(url, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            })
+            .then((res) => res.data?.data)
+      );
+
+      
+    if (!isLoading) {
+        const dataProducts = data?.map((product: any) => {
+            const group: any = product.group.map((group: any) => ({
+                id: group.id,
+                Unit: group.unit,
+                price: group.price,
+                stock: group.stock,
+            }))
+            return {
+                id: product.id,
+                name: product.name,
+                image: product.image,
+                group: group
+            }
+        })
+        dummyProducts = dataProducts;
+    }
+
+    const getHistory = async () => {
+        try {
+            const response = await axiosPrivate.get(`/pos/invoice/history?page=${currentPageRiwayat}`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+            const historyList = response.data.data.items.map((history: any) => ({
+                id: history.id,
+                waktu: history.time,
+                invoice: history.invoice,
+                groupRiwayat: history.groupInvoice.map((group: any) => ({
+                    id: group.id,
+                    name: group.name,
+                    quantity: group.quantity,
+                    group: group.group.map((unit: any) => ({
+                        id: unit.id,
+                        Unit: unit.unit,
+                        price: unit.price,
+                    })),
+                })),
+            }))
+            productsRiwayat = historyList;
+            setMaxPageRiwayat(response.data.data.meta.totalPages);
+            // console.log("history", response.data.data);
+            setRiwayatIsLoading(false);
+        } catch (error: any) {
+            console.error(error);
+        }
+    }
+
+    const getDraft = async () => {
+        try {
+            const response = await axiosPrivate.get(`/pos/draft/all?page=${currentPageDraft}`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+            const draftList = response.data.data.items.map((draft: any) => ({
+                id: draft.id,
+                waktu: draft.time,
+                invoice: draft.invoice,
+                groupDraft: draft.groupDraft.map((group: any) => ({
+                    id: group.id,
+                    name: group.name,
+                    quantity: group.quantity,
+                    group: group.group.map((unit: any) => ({
+                        id: unit.id,
+                        Unit: unit.unit,
+                        price: unit.price,
+                    })),
+                }))
+            }));
+            productsDraft = draftList;
+            setMaxPageDraft(response.data.data.meta.totalPages);
+            setDraftIsLoading(false);
+            console.log("draft", response.data.data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    const getDraftCount = async () => {
+        try {
+            const response = await axiosPrivate.get("/pos/draft/count", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+            setDraftCount(response.data.data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // Check Authorization
+    const checkAuth = async () => {
+        if (!accessToken || !username || !image || nickname) {
+            router.push("/login");
+        } else {
+            setIsLoadingUser(false);
+        }
+    }
+
+    // Check Cashier Daily Cash on Hand
+    const dailyCashOnHand = async () => {
+        try {
+            const response = await axiosPrivate.get("/pos/cashier/cash-on-hand/get", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+            const cash_on_hand = parseInt(response.data.data);
+            setModalValue(cash_on_hand);
+        } catch (error: any) {
+            if (error?.response?.status === 404) {
+                setIsModalOpen(true);
+            }
+            console.error(error);
+        }
+        setTimeout(() => {
+            setIsLoadingCashOnHand(false);
+        }, 500);
+    }
+
+    const getIncome = async () => {
+        try {
+            const response = await axiosPrivate.get("/pos/cashier/income/get", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+            const income = parseInt(response.data.data);
+            setIncome(income);
+        } catch (error: any) {
+            console.error(error);
+        }
+    }
+    
+    // Get Draft and History
+    getDraft();
+    getHistory();
+    getDraftCount();
+    
+    // Loading
+    if (isLoadingUser) {
+        checkAuth();
+        return loading();
+    }
+    
+    if (isLoadingCashOnHand) {
+        getIncome();
+        dailyCashOnHand();
+        return loading();
+    }
 
     return (
         <div>
@@ -414,14 +717,14 @@ const Pos = () => {
                         <div className="left text-[16px] font-semibold text-white ">Yang's Grosir</div>
                         <div className="right text-end text-white">
                             <p className="text-[14px]">Penjualan</p>
-                            <p className="text-[16px] font-bold">Rp. 560.500</p>
+                            <p className="text-[16px] font-bold">Rp. {income.toLocaleString('id-ID')}</p>
                         </div>
                     </div>
 
                     {/* tab card */}
                     <div className="headcard mt-2 gap-3 grid h-[36px] grid-cols-12 ">
                         <div className="search col-span-6">
-                            <Search placeholder="Cari Produk" />
+                            <Search search={search} onChange={handleSearch}  placeholder="Cari Produk" />
                         </div>
                         <div className="btn col-span-6 text-[14px] flex gap-3">
                             <div className="text-md bg-white rounded-md flex-1 h-full border focus:ring-grey focus:border-grey border-grey">
@@ -432,9 +735,7 @@ const Pos = () => {
                             <div className="text-md bg-white rounded-md flex-1 h-full">
                                 <button onClick={handleOpenDraft} className="w-full text-md bg-primary flex-1 rounded-md  py-[5px]  h-full flex gap-2 items-center justify-center">
                                     <div className="text-white">Pesanan Tersimpan</div>
-                                    {productsDraft.length > 0 && (
-                                        <div className="text-black bg-white text-[10px] font-bold rounded-full px-1 inline-block">{productsDraft.length}</div>
-                                    )}
+                                    <div className="text-black bg-white text-[10px] font-bold rounded-full px-1 inline-block">{draftCount === 0? "" : draftCount}</div>
                                 </button>
                             </div>
                             <FullscreenButton />
@@ -447,6 +748,7 @@ const Pos = () => {
                             <div key={product.id} className="cardProduct col-span-3">
                                 <CardProduct
                                     name={product.name}
+                                    image={product.image}
                                     group={product.group}
                                     onAddToCart={(selectedUnitId) => addToCart(product, selectedUnitId)}
                                 />
@@ -465,7 +767,7 @@ const Pos = () => {
                             <p className="text-[16px] text-primary font-bold">Rp. {modalValue.toLocaleString("id-ID")}</p>
                         </div>
                         <div className="right">
-                            <ProfilePos />
+                            <ProfilePos username={username} image={image} logout={handleLogout} />
                         </div>
                     </div>
 
@@ -475,7 +777,7 @@ const Pos = () => {
                             <div className="header bg-primary flex justify-between text-white p-3">
                                 <div className="left font-semibold">
                                     <div className="text-[20px]">Pesanan Baru</div>
-                                    <div className="text-[14px]">#Inv123</div>
+                                    {/* <div className="text-[14px]">#Inv123</div> */}
                                 </div>
                                 <div className="right">
                                     <div className="font-semibold text-[14px]">
@@ -553,7 +855,7 @@ const Pos = () => {
                                         type="text"
                                         disabled={isCartEmpty}
                                         value={discount}
-                                        onChange={(e) => setDiscount(Number(e.target.value))}
+                                        onChange={(e) => {isNaN(Number(e.target.value)) ? setDiscount(0) : setDiscount(Number(e.target.value))}}
                                         className="text-[14px] h-[25px] rounded-[5px] border border-grey px-2 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
                                     />
                                 </div>
@@ -584,11 +886,11 @@ const Pos = () => {
                 {/* halaman keranjang */}
                 {/* Komponen ModalCash */}
                 {isModalOpen && (
-                    <ModalCash value={modalValue} onChange={handleModalChange} onClose={handleModalClose} />
+                    <ModalCash value={modalValue} onChange={handleModalChange} onClose={handleModalClose} image={image} username={username} />
                 )}
             </div>
             {/* payment */}
-            <PaymentModal onPay={handleBayar} quantity={selectedProducts.length} total={totalAfterDiscount} onClose={() => setPaymentModalOpen(false)} isOpen={isPaymentModalOpen}>
+            <PaymentModal onPay={handleBayar}  quantity={selectedProducts.length} total={totalAfterDiscount} onClose={() => setPaymentModalOpen(false)} isOpen={isPaymentModalOpen}>
                 {selectedProducts.map((product) => (
                     <div key={`${product.id}-${product.selectedUnitId}`} className="cart  w-full flex justify-between text-[14px] mt-1">
                         <div className="produk w-[50%] ">{product.name}</div>
@@ -626,7 +928,7 @@ const Pos = () => {
                             <table className="table-auto min-w-full border-collapse">
                                 <thead className="sticky top-0">
                                     <tr>
-                                        {columnsDraft.map((column, index) => (
+                                        {!draftIsLoading && columnsDraft.map((column, index) => (
                                             <th
                                                 key={index}
                                                 className={
@@ -654,7 +956,7 @@ const Pos = () => {
                                                 <div className="flex justify-start items-center h-12 border-b">
                                                     {(() => {
                                                         const elements: React.ReactNode[] = [];
-                                                        const groupDraft = product.groupDraft || [];
+                                                        const groupDraft: any[] = product.groupDraft || [];
 
                                                         for (let index = 0; index < Math.min(groupDraft.length, 4); index++) {
                                                             elements.push(<div key={index}>{groupDraft[index].name}</div>);
@@ -673,17 +975,19 @@ const Pos = () => {
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-start items-center h-12 border-b">
-                                                    {product.waktu} WIB
+                                                    {new Date(product.waktu).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }).split(",")[1]} WIB
                                                 </div>
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                                                     <button
                                                         disabled={selectedProducts.length > 0}
-                                                        className={`text-md ${selectedProducts.length > 0 ? 'text-gray-500' : 'text-primary'} `} onClick={() => handleAddToCart(product)}>
+                                                        className={`text-md ${selectedProducts.length > 0 ? 'text-gray-500' : 'text-primary'} `} 
+                                                        onClick={() => {setDeleteId(product.id); handleAddToCart(product)}}
+                                                    >
                                                         Aktif
                                                     </button>
-                                                    <button onClick={onOpenDeleteDraft} className="text-[#D80027] text-md">Hapus</button>
+                                                    <button onClick={() => {setDeleteId(product.id); onOpenDeleteDraft()}} className="text-[#D80027] text-md">Hapus</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -696,8 +1000,8 @@ const Pos = () => {
                             <Pagination
                                 theme={paginationTheme}
                                 layout="pagination"
-                                currentPage={currentPage}
-                                totalPages={10}
+                                currentPage={currentPageDraft}
+                                totalPages={maxPageDraft}
                                 onPageChange={onPageChange}
                                 previousLabel=""
                                 nextLabel=""
@@ -765,7 +1069,7 @@ const Pos = () => {
                             <div className="w-full h-[1px] bg-[#CBD5E1] mt-2 mb-2"></div>
                         </div>
                         <div className="flex h-fit justify-between items-center mb-6">
-                            <Searchbar placeholder="Cari invoice" />
+                            {/*<Searchbar placeholder="Cari invoice" />*/}
                             <button
                                 className="bg-[#FF6B35] h-fit px-3 py-1 rounded-md text-white text-md flex justify-center items-center gap-2"
                             >
@@ -779,7 +1083,7 @@ const Pos = () => {
                             <table className="table-auto min-w-full border-collapse">
                                 <thead className="sticky top-0">
                                     <tr>
-                                        {columnsDraft.map((column, index) => (
+                                        {!riwayatIsLoading && columnsDraft.map((column, index) => (
                                             <th
                                                 key={index}
                                                 className={
@@ -807,7 +1111,7 @@ const Pos = () => {
                                                 <div className="flex justify-start items-center h-12 border-b">
                                                     {(() => {
                                                         const elements: React.ReactNode[] = [];
-                                                        const groupRiwayat = product.groupRiwayat || [];
+                                                        const groupRiwayat: any[] = product.groupRiwayat || [];
 
                                                         for (let index = 0; index < Math.min(groupRiwayat.length, 4); index++) {
                                                             elements.push(<div key={index}>{groupRiwayat[index].name}</div>);
@@ -826,14 +1130,14 @@ const Pos = () => {
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-start items-center h-12 border-b">
-                                                    {product.waktu} WIB
+                                                    {new Date(product.waktu).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }).split(",")[1]} WIB
                                                 </div>
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-center items-center gap-x-5 h-12 border-b">
 
                                                     <button className="text-primary text-md">Print</button>
-                                                    <button onClick={onOpenBatalRiwayat} className="text-[#D80027] text-md">Batalkan</button>
+                                                    <button onClick={(e) => {setDeleteId(product.id); setInvoiceCode(product.invoice); onOpenBatalRiwayat()}} className="text-[#D80027] text-md">Batalkan</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -846,9 +1150,9 @@ const Pos = () => {
                             <Pagination
                                 theme={paginationTheme}
                                 layout="pagination"
-                                currentPage={currentPage}
-                                totalPages={10}
-                                onPageChange={onPageChange}
+                                currentPage={currentPageRiwayat}
+                                totalPages={maxPageRiwayat}
+                                onPageChange={onPageChangeRiwayat}
                                 previousLabel=""
                                 nextLabel=""
                                 showIcons
@@ -880,17 +1184,17 @@ const Pos = () => {
                             <div className="head flex items-center justify-between">
                                 <div className="nama flex items-center gap-2">
                                     <div className="h-[40px] w-[40px] img rounded-full overflow-hidden">
-                                        <img src="/assets/pos/profile.png" alt="" />
+                                        <img src={image} alt="Kasir" />
                                     </div>
                                     <div className="flex flex-start flex-col">
-                                        <div className='text-start text-[14px] font-semibold'>Amel Sinta</div>
+                                        <div className='text-start text-[14px] font-semibold'>{username}</div>
                                         <div className="text-start text-[10px] text-[#5E5E5D]">Cashier</div>
                                     </div>
 
                                 </div>
-                                <div className="invoice text-[16px] font-semibold text-primary">#INV1213</div>
+                                <div className="invoice text-[16px] font-semibold text-primary">{invoiceCode}</div>
                             </div>
-                            <form onSubmit={(event) => handleKonfirmasi(event)} className="form bg-yellow flex flex-col gap-2">
+                            <form onSubmit={handleSubmit(handleKonfirmasi)} className="form bg-yellow flex flex-col gap-2">
                                 <div className="kode">
                                     <div className="w-full flex flex-col items-start">
                                         <label className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
@@ -899,8 +1203,20 @@ const Pos = () => {
                                         <input
                                             required
                                             type="text"
+                                            value={code}
+                                            minLength={6}
+                                            maxLength={6}
                                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                                             placeholder="Kode kasir"
+                                            {...register("code", {
+                                                required: true,
+                                                onChange(event) {
+                                                    setCode(event.target.value);
+                                                    this.value = event.target.value;
+                                                },
+                                                maxLength: 6,
+                                                minLength: 6,
+                                            })}
                                         ></input>
                                     </div>
                                 </div>
@@ -909,9 +1225,20 @@ const Pos = () => {
                                         <label className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
                                             Keterangan
                                         </label>
-                                        <textarea rows={8} required
+                                        <textarea 
+                                            required
+                                            rows={8}
+                                            value={message} 
+                                            defaultValue={""}
                                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                                             placeholder="Keterangan"
+                                            {...register("message", {
+                                                required: true,
+                                                onChange(event) {
+                                                    setMessage(event.target.value);
+                                                    this.value = event.target.value;
+                                                }
+                                            })}
                                         ></textarea>
                                     </div>
                                 </div>
