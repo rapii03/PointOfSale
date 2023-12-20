@@ -273,23 +273,71 @@ const Pos = () => {
         }
     };
 
-    const handleDraft = () => {
-        console.log(selectedProducts)
+    const handleDraft = async () => {
+        const data = {
+            discount: discount.toString(),
+            items: selectedProducts.map((product) => ({ unit: product?.selectedUnitId, quantity: product?.quantity?.toString() }))
+        }
+        try {
+            if (deleteId !== "") {
+                await handleDeleteDraft();
+                setDeleteId("");
+            }
+            const response = await axiosPrivate.post('/pos/draft/create', data, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                }
+            })
+            setTimeout(() => {
+                alert(response.data.message);
+            }, 750);
+        } catch (e: any) {
+            console.error(e);
+        }
+        setIsLoadingCashOnHand(true);
+        deleteAllProducts();
     };
 
-    const handleBayar = () => {
-        console.log("Bayar");
-        setPaymentModalOpen(false)
-        deleteAllProducts()
+    const handleBayar = async () => {
+        const data = {
+            discount: discount.toString(),
+            items: selectedProducts.map((product) => ({ unit: product?.selectedUnitId, quantity: product?.quantity?.toString() }))
+        }
+        // console.log("Bayar", data);
+        try {
+            if (deleteId !== "") {
+                await handleDeleteDraft();
+                setDeleteId("");
+            }
+            const response = await axiosPrivate.post('/pos/invoice/create', data, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                }
+            })
+            setTimeout(() => {
+                alert(response.data.message);
+            }, 750);
+        } catch (error) {
+            console.error(error);
+        }
+        setIsLoadingCashOnHand(true);
+        setPaymentModalOpen(false);
+        deleteAllProducts();
     };
     // card
 
     // DRAFT
     const columnsDraft = ["Invoice", "Produk", "Waktu", "Aksi"];
+    const [draftIsLoading, setDraftIsLoading] = useState(true);
+    const [draftCount, setDraftCount] = useState(0);
+    const [maxPageDraft, setMaxPageDraft] = useState(1);
     const [cartProducts, setCartProducts] = useState<Product[]>([]);
     const [draftProducts, setDraftProducts] = useState<Product[]>(productsDraft);
-    const [currentPage, setCurrentPage] = useState(1);
-    const onPageChange = (page: number) => setCurrentPage(page);
+    const [currentPageDraft, setCurrentPageDraft] = useState(1);
+    const onPageChange = async (page: number) => {
+        setCurrentPageDraft(page)
+        setDraftIsLoading(true);
+    };
     const paginationTheme = {
         pages: {
             base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px border border-[#FF6B35] rounded-md",
@@ -365,7 +413,7 @@ const Pos = () => {
                 )
                 .filter((item): item is NonNullable<typeof item> => item !== null); // Type assertion
 
-            console.log("Adding items to the cart:", itemsToAdd);
+            // console.log("Adding items to the cart:", itemsToAdd);
             // Add the selected products to the cart
             setSelectedProducts((prevSelectedProducts) => [
                 ...prevSelectedProducts,
@@ -406,18 +454,35 @@ const Pos = () => {
         handleOpenDraft()
     }
 
-    const handleDeleteDraft = () => {
-        console.log("Delete");
+    const handleDeleteDraft = async () => {
+        console.log("Delete", deleteId);
+        try {
+            await axiosPrivate.delete("/pos/draft/delete", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                data: {
+                    id: deleteId,
+                },
+            })
+            setDeleteId("");
+        } catch (error) {
+            console.error(error);
+        }
         onCloseDeleteDraft();
         handleCloseDraft();
     };
     // DRAFT
 
     // RIWAYAT
+    const [riwayatIsLoading, setRiwayatIsLoading] = useState(true);
     const [modalRiwayat, setmodalRiwayat] = useState(false);
     const [maxPageRiwayat, setMaxPageRiwayat] = useState(1);
     const [currentPageRiwayat, setCurrentPageRiwayat] = useState(1);
-    const onPageChangeRiwayat = (page: number) => setCurrentPageRiwayat(page);
+    const onPageChangeRiwayat = (page: number) => {
+        setCurrentPageRiwayat(page);
+        setRiwayatIsLoading(true);
+    };
     const { register, handleSubmit } = useForm<{ code: string, message: string }>();
 
     const handleOpenRiwayat = () => {
@@ -440,7 +505,7 @@ const Pos = () => {
 
     const handleKonfirmasi: SubmitHandler<any> = async (data: any) => {
         data.id = deleteId;
-        console.log("data", data);
+        // console.log("data", data);
         try {
             await axiosPrivate.patch("/pos/invoice/set-delete-request", data, {
                 headers: {
@@ -466,7 +531,7 @@ const Pos = () => {
 
     const handleSearch = (e: any) => {
         setSearch(e.target.value);
-        setCurrentPage(1);
+        setCurrentPageDraft(1);
     }
 
 
@@ -530,7 +595,8 @@ const Pos = () => {
             }))
             productsRiwayat = historyList;
             setMaxPageRiwayat(response.data.data.meta.totalPages);
-            console.log("history", response.data.data);
+            // console.log("history", response.data.data);
+            setRiwayatIsLoading(false);
         } catch (error: any) {
             console.error(error);
         }
@@ -538,7 +604,7 @@ const Pos = () => {
 
     const getDraft = async () => {
         try {
-            const response = await axiosPrivate.get("/pos/draft/all", {
+            const response = await axiosPrivate.get(`/pos/draft/all?page=${currentPageDraft}`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 },
@@ -559,7 +625,22 @@ const Pos = () => {
                 }))
             }));
             productsDraft = draftList;
+            setMaxPageDraft(response.data.data.meta.totalPages);
+            setDraftIsLoading(false);
             console.log("draft", response.data.data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    const getDraftCount = async () => {
+        try {
+            const response = await axiosPrivate.get("/pos/draft/count", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+            setDraftCount(response.data.data);
         } catch (err) {
             console.error(err);
         }
@@ -590,7 +671,9 @@ const Pos = () => {
             }
             console.error(error);
         }
-        setIsLoadingCashOnHand(false);
+        setTimeout(() => {
+            setIsLoadingCashOnHand(false);
+        }, 500);
     }
 
     const getIncome = async () => {
@@ -608,8 +691,9 @@ const Pos = () => {
     }
     
     // Get Draft and History
-    getHistory();
     getDraft();
+    getHistory();
+    getDraftCount();
     
     // Loading
     if (isLoadingUser) {
@@ -651,9 +735,7 @@ const Pos = () => {
                             <div className="text-md bg-white rounded-md flex-1 h-full">
                                 <button onClick={handleOpenDraft} className="w-full text-md bg-primary flex-1 rounded-md  py-[5px]  h-full flex gap-2 items-center justify-center">
                                     <div className="text-white">Pesanan Tersimpan</div>
-                                    {productsDraft.length > 0 && (
-                                        <div className="text-black bg-white text-[10px] font-bold rounded-full px-1 inline-block">{productsDraft.length}</div>
-                                    )}
+                                    <div className="text-black bg-white text-[10px] font-bold rounded-full px-1 inline-block">{draftCount === 0? "" : draftCount}</div>
                                 </button>
                             </div>
                             <FullscreenButton />
@@ -773,7 +855,7 @@ const Pos = () => {
                                         type="text"
                                         disabled={isCartEmpty}
                                         value={discount}
-                                        onChange={(e) => setDiscount(Number(e.target.value))}
+                                        onChange={(e) => {isNaN(Number(e.target.value)) ? setDiscount(0) : setDiscount(Number(e.target.value))}}
                                         className="text-[14px] h-[25px] rounded-[5px] border border-grey px-2 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
                                     />
                                 </div>
@@ -808,7 +890,7 @@ const Pos = () => {
                 )}
             </div>
             {/* payment */}
-            <PaymentModal onPay={handleBayar} quantity={selectedProducts.length} total={totalAfterDiscount} onClose={() => setPaymentModalOpen(false)} isOpen={isPaymentModalOpen}>
+            <PaymentModal onPay={handleBayar}  quantity={selectedProducts.length} total={totalAfterDiscount} onClose={() => setPaymentModalOpen(false)} isOpen={isPaymentModalOpen}>
                 {selectedProducts.map((product) => (
                     <div key={`${product.id}-${product.selectedUnitId}`} className="cart  w-full flex justify-between text-[14px] mt-1">
                         <div className="produk w-[50%] ">{product.name}</div>
@@ -846,7 +928,7 @@ const Pos = () => {
                             <table className="table-auto min-w-full border-collapse">
                                 <thead className="sticky top-0">
                                     <tr>
-                                        {columnsDraft.map((column, index) => (
+                                        {!draftIsLoading && columnsDraft.map((column, index) => (
                                             <th
                                                 key={index}
                                                 className={
@@ -893,17 +975,19 @@ const Pos = () => {
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-start items-center h-12 border-b">
-                                                    {product.waktu} WIB
+                                                    {new Date(product.waktu).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }).split(",")[1]} WIB
                                                 </div>
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                                                     <button
                                                         disabled={selectedProducts.length > 0}
-                                                        className={`text-md ${selectedProducts.length > 0 ? 'text-gray-500' : 'text-primary'} `} onClick={() => handleAddToCart(product)}>
+                                                        className={`text-md ${selectedProducts.length > 0 ? 'text-gray-500' : 'text-primary'} `} 
+                                                        onClick={() => {setDeleteId(product.id); handleAddToCart(product)}}
+                                                    >
                                                         Aktif
                                                     </button>
-                                                    <button onClick={onOpenDeleteDraft} className="text-[#D80027] text-md">Hapus</button>
+                                                    <button onClick={() => {setDeleteId(product.id); onOpenDeleteDraft()}} className="text-[#D80027] text-md">Hapus</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -916,8 +1000,8 @@ const Pos = () => {
                             <Pagination
                                 theme={paginationTheme}
                                 layout="pagination"
-                                currentPage={currentPage}
-                                totalPages={10}
+                                currentPage={currentPageDraft}
+                                totalPages={maxPageDraft}
                                 onPageChange={onPageChange}
                                 previousLabel=""
                                 nextLabel=""
@@ -999,7 +1083,7 @@ const Pos = () => {
                             <table className="table-auto min-w-full border-collapse">
                                 <thead className="sticky top-0">
                                     <tr>
-                                        {columnsDraft.map((column, index) => (
+                                        {!riwayatIsLoading && columnsDraft.map((column, index) => (
                                             <th
                                                 key={index}
                                                 className={
@@ -1046,7 +1130,7 @@ const Pos = () => {
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-start items-center h-12 border-b">
-                                                    {product.waktu.split("T")[1].slice(0, 8)} WIB
+                                                    {new Date(product.waktu).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }).split(",")[1]} WIB
                                                 </div>
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">

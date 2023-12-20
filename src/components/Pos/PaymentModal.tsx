@@ -18,7 +18,7 @@ const PaymentModal: React.FC<PaymentProps> = ({ children, total, isOpen, onClose
     };
 
     const handleNumericInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const input = e.target.value;
+        const input = e.target.value === "" ? "0" : e.target.value;
 
         // Validasi: Hanya izinkan angka
         const numericInput = input.replace(/[^0-9]/g, '');
@@ -108,6 +108,7 @@ const PaymentModal: React.FC<PaymentProps> = ({ children, total, isOpen, onClose
                                         <div className="wrapinput relative">
                                             <div className="text-[16px] font-semibold absolute left-2 top-[8px]">Rp.</div>
                                             <input
+                                                autoFocus
                                                 type="text"
                                                 className="text-[16px] font-semibold pl-[40px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 placeholder-slate-400 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary "
                                                 placeholder="0"
