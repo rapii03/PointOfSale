@@ -18,6 +18,7 @@ import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useRouter } from 'next/navigation';
 import useSWR, { SWRResponse } from 'swr';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
 
 
@@ -97,75 +98,80 @@ let dummyProducts: Product[] = [
     // Add more dummy data as needed
 ];
 
-const productsDraft = [
-    {
-        id: '1',
-        invoice: 'INV123',
-        waktu: '10:00:00',
-        groupDraft: [
-            { id: '5', name: 'Bimoli', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3000 }] },
-            { id: '6', name: 'Sunlight', quantity: 2, group: [{ id: '1', Unit: 'Pcs', price: 4000 }] },
-        ],
-    },
-    {
-        id: '2',
-        invoice: 'INV124',
-        waktu: '10:00:00',
-        groupDraft: [
-            { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3500 },] },
-            { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '2', Unit: 'Dus', price: 50000 },] },
-            { id: '2', name: 'Susu', quantity: 2, group: [{ id: '2', Unit: 'Dus', price: 70000 }] },
-        ],
-    },
+let productsDraft: any[] = [
+    // {
+    //     id: '1',
+    //     invoice: 'INV123',
+    //     waktu: '10:00:00',
+    //     groupDraft: [
+    //         { id: '5', name: 'Bimoli', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3000 }] },
+    //         { id: '6', name: 'Sunlight', quantity: 2, group: [{ id: '1', Unit: 'Pcs', price: 4000 }] },
+    //     ],
+    // },
+    // {
+    //     id: '2',
+    //     invoice: 'INV124',
+    //     waktu: '10:00:00',
+    //     groupDraft: [
+    //         { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3500 },] },
+    //         { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '2', Unit: 'Dus', price: 50000 },] },
+    //         { id: '2', name: 'Susu', quantity: 2, group: [{ id: '2', Unit: 'Dus', price: 70000 }] },
+    //     ],
+    // },
     // Add more dummy data as needed
 ];
 
-const productsRiwayat = [
-    {
-        id: '1',
-        invoice: 'INV123',
-        waktu: '10:00:00',
-        groupRiwayat: [
-            { id: '5', name: 'Riwayat', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3000 }] },
-            { id: '6', name: 'Sunlight', quantity: 2, group: [{ id: '1', Unit: 'Pcs', price: 4000 }] },
-        ],
-    },
-    {
-        id: '2',
-        invoice: 'INV124',
-        waktu: '10:00:00',
-        groupRiwayat: [
-            { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3500 },] },
-            { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '2', Unit: 'Dus', price: 50000 },] },
-            { id: '2', name: 'Susu', quantity: 2, group: [{ id: '2', Unit: 'Dus', price: 70000 }] },
-        ],
-    },
+let productsRiwayat: any[] = [
+    // {
+    //     id: '1',
+    //     invoice: 'INV123',
+    //     waktu: '10:00:00',
+    //     groupRiwayat: [
+    //         { id: '5', name: 'Riwayat', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3000 }] },
+    //         { id: '6', name: 'Sunlight', quantity: 2, group: [{ id: '1', Unit: 'Pcs', price: 4000 }] },
+    //     ],
+    // },
+    // {
+    //     id: '2',
+    //     invoice: 'INV124',
+    //     waktu: '10:00:00',
+    //     groupRiwayat: [
+    //         { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '1', Unit: 'Pcs', price: 3500 },] },
+    //         { id: '1', name: 'Indomie', quantity: 3, group: [{ id: '2', Unit: 'Dus', price: 50000 },] },
+    //         { id: '2', name: 'Susu', quantity: 2, group: [{ id: '2', Unit: 'Dus', price: 70000 }] },
+    //     ],
+    // },
     // Add more dummy data as needed
 ];
 
 const Pos = () => {
-    const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
-    const [totalPrice, setTotalPrice] = useState<number>(0);
-    const [discount, setDiscount] = useState<number>(0);
     const [income, setIncome] = useState<number>(0);
+    const [discount, setDiscount] = useState<number>(0);
+    const [totalPrice, setTotalPrice] = useState<number>(0);
+    const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
 
     // Loading 
     const [isLoadingUser, setIsLoadingUser] = useState(true);
     const [isLoadingCashOnHand, setIsLoadingCashOnHand] = useState(true);
     
     // Use
-    const axiosPrivate = useAxiosPrivate();
     const router = useRouter();
+    const axiosPrivate = useAxiosPrivate();
 
 
     // Use LocalStorage
-    const [nickname, setNickname] = useLocalStorage("nickname", "");
     const [image, setImage] = useLocalStorage("image", "");
+    const [nickname, setNickname] = useLocalStorage("nickname", "");
     const [username, setUsername] = useLocalStorage("username", "");
     const [accessToken, setAccessToken] = useLocalStorage("accessToken", "");
     const [refreshToken, setRefreshToken] = useLocalStorage("refreshToken", "");
 
+    // Var
+    const [code, setCode] = useState<string>("");
     const [search, setSearch] = useState<string>("");
+    const [message, setMessage] = useState<string>("");
+    const [deleteId, setDeleteId] = useState<string>("");
+    const [invoiceCode, setInvoiceCode] = useState<string>("");
 
     const addToCart = (product: Product, selectedUnitId: string) => {
         console.log("Adding to cart:", product, selectedProducts);
@@ -409,6 +415,11 @@ const Pos = () => {
 
     // RIWAYAT
     const [modalRiwayat, setmodalRiwayat] = useState(false);
+    const [maxPageRiwayat, setMaxPageRiwayat] = useState(1);
+    const [currentPageRiwayat, setCurrentPageRiwayat] = useState(1);
+    const onPageChangeRiwayat = (page: number) => setCurrentPageRiwayat(page);
+    const { register, handleSubmit } = useForm<{ code: string, message: string }>();
+
     const handleOpenRiwayat = () => {
         setmodalRiwayat(!modalRiwayat);
     };
@@ -422,13 +433,25 @@ const Pos = () => {
         handleCloseRiwayat()
     }
     function onCloseBatalRiwayat() {
+        setDeleteId("");
         setOpenBatalModal(false);
         handleOpenRiwayat()
     }
 
-    const handleKonfirmasi = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        console.log("Batal");
+    const handleKonfirmasi: SubmitHandler<any> = async (data: any) => {
+        data.id = deleteId;
+        console.log("data", data);
+        try {
+            await axiosPrivate.patch("/pos/invoice/set-delete-request", data, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+        } catch (error: any) {
+            console.error(error);
+        }
+        setCode("");
+        setMessage("");
         onCloseBatalRiwayat();
         handleCloseRiwayat();
     };
@@ -482,7 +505,65 @@ const Pos = () => {
         })
         dummyProducts = dataProducts;
     }
-    
+
+    const getHistory = async () => {
+        try {
+            const response = await axiosPrivate.get(`/pos/invoice/history?page=${currentPageRiwayat}`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+            const historyList = response.data.data.items.map((history: any) => ({
+                id: history.id,
+                waktu: history.time,
+                invoice: history.invoice,
+                groupRiwayat: history.groupInvoice.map((group: any) => ({
+                    id: group.id,
+                    name: group.name,
+                    quantity: group.quantity,
+                    group: group.group.map((unit: any) => ({
+                        id: unit.id,
+                        Unit: unit.unit,
+                        price: unit.price,
+                    })),
+                })),
+            }))
+            productsRiwayat = historyList;
+            setMaxPageRiwayat(response.data.data.meta.totalPages);
+            console.log("history", response.data.data);
+        } catch (error: any) {
+            console.error(error);
+        }
+    }
+
+    const getDraft = async () => {
+        try {
+            const response = await axiosPrivate.get("/pos/draft/all", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+            const draftList = response.data.data.items.map((draft: any) => ({
+                id: draft.id,
+                waktu: draft.time,
+                invoice: draft.invoice,
+                groupDraft: draft.groupDraft.map((group: any) => ({
+                    id: group.id,
+                    name: group.name,
+                    quantity: group.quantity,
+                    group: group.group.map((unit: any) => ({
+                        id: unit.id,
+                        Unit: unit.unit,
+                        price: unit.price,
+                    })),
+                }))
+            }));
+            productsDraft = draftList;
+            console.log("draft", response.data.data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     // Check Authorization
     const checkAuth = async () => {
@@ -525,7 +606,11 @@ const Pos = () => {
             console.error(error);
         }
     }
-
+    
+    // Get Draft and History
+    getHistory();
+    getDraft();
+    
     // Loading
     if (isLoadingUser) {
         checkAuth();
@@ -789,7 +874,7 @@ const Pos = () => {
                                                 <div className="flex justify-start items-center h-12 border-b">
                                                     {(() => {
                                                         const elements: React.ReactNode[] = [];
-                                                        const groupDraft = product.groupDraft || [];
+                                                        const groupDraft: any[] = product.groupDraft || [];
 
                                                         for (let index = 0; index < Math.min(groupDraft.length, 4); index++) {
                                                             elements.push(<div key={index}>{groupDraft[index].name}</div>);
@@ -900,7 +985,7 @@ const Pos = () => {
                             <div className="w-full h-[1px] bg-[#CBD5E1] mt-2 mb-2"></div>
                         </div>
                         <div className="flex h-fit justify-between items-center mb-6">
-                            <Searchbar placeholder="Cari invoice" />
+                            {/*<Searchbar placeholder="Cari invoice" />*/}
                             <button
                                 className="bg-[#FF6B35] h-fit px-3 py-1 rounded-md text-white text-md flex justify-center items-center gap-2"
                             >
@@ -942,7 +1027,7 @@ const Pos = () => {
                                                 <div className="flex justify-start items-center h-12 border-b">
                                                     {(() => {
                                                         const elements: React.ReactNode[] = [];
-                                                        const groupRiwayat = product.groupRiwayat || [];
+                                                        const groupRiwayat: any[] = product.groupRiwayat || [];
 
                                                         for (let index = 0; index < Math.min(groupRiwayat.length, 4); index++) {
                                                             elements.push(<div key={index}>{groupRiwayat[index].name}</div>);
@@ -961,14 +1046,14 @@ const Pos = () => {
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-start items-center h-12 border-b">
-                                                    {product.waktu} WIB
+                                                    {product.waktu.split("T")[1].slice(0, 8)} WIB
                                                 </div>
                                             </td>
                                             <td className="border-collapse p-2 px-0 text-center">
                                                 <div className="flex justify-center items-center gap-x-5 h-12 border-b">
 
                                                     <button className="text-primary text-md">Print</button>
-                                                    <button onClick={onOpenBatalRiwayat} className="text-[#D80027] text-md">Batalkan</button>
+                                                    <button onClick={(e) => {setDeleteId(product.id); setInvoiceCode(product.invoice); onOpenBatalRiwayat()}} className="text-[#D80027] text-md">Batalkan</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -981,9 +1066,9 @@ const Pos = () => {
                             <Pagination
                                 theme={paginationTheme}
                                 layout="pagination"
-                                currentPage={currentPage}
-                                totalPages={10}
-                                onPageChange={onPageChange}
+                                currentPage={currentPageRiwayat}
+                                totalPages={maxPageRiwayat}
+                                onPageChange={onPageChangeRiwayat}
                                 previousLabel=""
                                 nextLabel=""
                                 showIcons
@@ -1015,17 +1100,17 @@ const Pos = () => {
                             <div className="head flex items-center justify-between">
                                 <div className="nama flex items-center gap-2">
                                     <div className="h-[40px] w-[40px] img rounded-full overflow-hidden">
-                                        <img src="/assets/pos/profile.png" alt="" />
+                                        <img src={image} alt="Kasir" />
                                     </div>
                                     <div className="flex flex-start flex-col">
-                                        <div className='text-start text-[14px] font-semibold'>Amel Sinta</div>
+                                        <div className='text-start text-[14px] font-semibold'>{username}</div>
                                         <div className="text-start text-[10px] text-[#5E5E5D]">Cashier</div>
                                     </div>
 
                                 </div>
-                                <div className="invoice text-[16px] font-semibold text-primary">#INV1213</div>
+                                <div className="invoice text-[16px] font-semibold text-primary">{invoiceCode}</div>
                             </div>
-                            <form onSubmit={(event) => handleKonfirmasi(event)} className="form bg-yellow flex flex-col gap-2">
+                            <form onSubmit={handleSubmit(handleKonfirmasi)} className="form bg-yellow flex flex-col gap-2">
                                 <div className="kode">
                                     <div className="w-full flex flex-col items-start">
                                         <label className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
@@ -1034,8 +1119,20 @@ const Pos = () => {
                                         <input
                                             required
                                             type="text"
+                                            value={code}
+                                            minLength={6}
+                                            maxLength={6}
                                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                                             placeholder="Kode kasir"
+                                            {...register("code", {
+                                                required: true,
+                                                onChange(event) {
+                                                    setCode(event.target.value);
+                                                    this.value = event.target.value;
+                                                },
+                                                maxLength: 6,
+                                                minLength: 6,
+                                            })}
                                         ></input>
                                     </div>
                                 </div>
@@ -1044,9 +1141,20 @@ const Pos = () => {
                                         <label className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
                                             Keterangan
                                         </label>
-                                        <textarea rows={8} required
+                                        <textarea 
+                                            required
+                                            rows={8}
+                                            value={message} 
+                                            defaultValue={""}
                                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FF6B35] focus:border-[#FF6B35] block w-full p-2.5"
                                             placeholder="Keterangan"
+                                            {...register("message", {
+                                                required: true,
+                                                onChange(event) {
+                                                    setMessage(event.target.value);
+                                                    this.value = event.target.value;
+                                                }
+                                            })}
                                         ></textarea>
                                     </div>
                                 </div>
