@@ -13,7 +13,7 @@ export interface CounterProps {
 
 export interface Cancel {
   id: number;
-  invoice: string;
+  invoice: Record<any, any>;
   message: string;
 }
 
@@ -197,11 +197,10 @@ const Notifikasi = ({ counter = undefined }: CounterProps) => {
                             <div className="head">
                               <div className="flex justify-between items-center">
                                 <div className="inv text-[14px] font-bold text-[#FF6B35]">
-                                  {/* {item?.invoice} */}
-                                  invoice null
+                                  {item?.invoice?.code || "Kode tidak ada"}
                                 </div>
                                 <div className="nama text-[12px] font-medium">
-                                  *nama kasir belom dari be
+                                  {item?.invoice?.cashier?.username || "Nama Kasir Tidak Ada"}
                                 </div>
                               </div>
                               <div className="garis w-full h-[1px] bg-[#CBD5E1] mt-2 mb-2"></div>
@@ -221,10 +220,10 @@ const Notifikasi = ({ counter = undefined }: CounterProps) => {
                                   Detail
                                 </button> */}
                                 <Link
-                                  href={{
-                                    pathname: "/transaksi/detail-transaksi",
-                                    query: { id: item.id },
-                                  }}
+                                 href={{
+                                  pathname: "/transaksi/pending-detail-transaksi",
+                                  query: { id: item?.invoice?.id },
+                                }}
                                   className="bg-[#FF6B35] text-white px-2 py-1 rounded text-[12px]"
                                 >Detail
                                 </Link>

@@ -69,21 +69,13 @@ export default function DetailTransaksi() {
   ];
 
   const columns = ["No", "Produk", "Jumlah", "Harga", "Satuan", "Total"];
-  interface detailTransaksi {
-    id?: number;
-    produk: string;
-    jumlah: number;
-    harga: string;
-    satuan: string;
-    total: string;
-  }
 
   const [currentPage, setCurrentPage] = useState(1);
 
   const {
     data: dataDetail,
     error,
-    isLoading,
+    mutate,
   }: SWRResponse<dataDetail, any, boolean> = useSWR(
     `/invoice/detail?page=${currentPage}`,
     (url) => {
@@ -109,12 +101,24 @@ export default function DetailTransaksi() {
   );
 
   useEffect(() => {
-    mutate("/invoice/detail", router.query.id as string);
+    mutate(async () => {
+      const data = await axiosPrivate.post(
+        `/invoice/detail`,
+        {
+          id: router.query.id
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      console.log(data.data?.data);
+      return data.data?.data;
+    });
   }, [router.isReady]);
 
-
   const onPageChange = (page: number) => setCurrentPage(page);
-
   return (
     <AdminLayout>
       <div className="flex justify-between items-center mb-6">

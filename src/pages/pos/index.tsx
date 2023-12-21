@@ -558,6 +558,7 @@ const Pos = () => {
     handleCloseRiwayat();
     setShowToastKonfirmasi(true);
     setTimeout(() => {
+      setIsLoadingCashOnHand(true);
       setShowToastKonfirmasi(false);
     },2000)
   };

@@ -1,8 +1,45 @@
 import React from "react";
 import Head from "next/head";
 import AdminLayout from "@/components/AdminLayout";
+import useSWR from "swr";
+import { SWRResponse, mutate } from "swr";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import Invoice from "@/components/Invoice";
 
 export default function Dashboard() {
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
+
+  const { data, mutate }: SWRResponse<any, any, boolean> = useSWR(
+    `/invoice/report`,
+    (url) =>
+      axiosPrivate
+        .post(url,{},{
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => res.data?.data)
+  );
+
+  const {
+    data: dataProduk,
+    error,
+    isLoading,
+  }: SWRResponse<any, any, boolean> = useSWR(
+    `/product/group/all?limit=100`,
+    (url) =>
+      axiosPrivate
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => res.data?.data)
+  );
+
+
   const pendapatan: string = "8.340.000";
   const transaksi: number = 331;
   const jumlahProduk: number = 331;
@@ -56,7 +93,7 @@ export default function Dashboard() {
 
                     <p className="text-[#6D6D6D] font-medium">Pendapatan</p>
                   </div>
-                  <p className="font-semibold text-3xl">Rp. {pendapatan}</p>
+                  <p className="font-semibold text-3xl">Rp. {data?.income ? data?.income.toLocaleString() : 0}</p>
                 </div>
                 <div className=" bg-blue-200 flex flex-col space-y-3 p-[20px] rounded-lg w-[247px] ">
                   <div className="flex space-x-1">
@@ -84,7 +121,7 @@ export default function Dashboard() {
 
                     <p className="text-[#6D6D6D] font-medium">Transaksi</p>
                   </div>
-                  <p className="font-semibold text-3xl">{transaksi}</p>
+                  <p className="font-semibold text-3xl">{data?.invoice_count || 0}</p>
                 </div>
               </div>
               <div className="flex space-x-2 ">
@@ -128,7 +165,7 @@ export default function Dashboard() {
 
                     <p className="text-[#6D6D6D] font-medium">Produk</p>
                   </div>
-                  <p className="font-semibold text-3xl">{jumlahProduk}</p>
+                  <p className="font-semibold text-3xl">{data?.product_count || 0}</p>
                 </div>
                 <div className=" bg-pink-200 flex flex-col space-y-3 p-[20px] rounded-lg w-[247px]">
                   <div className="flex space-x-1">
@@ -156,16 +193,16 @@ export default function Dashboard() {
 
                     <p className="text-[#6D6D6D] font-medium">Customer</p>
                   </div>
-                  <p className="font-semibold text-3xl">{jumlahCustomer}</p>
+                  <p className="font-semibold text-3xl">{data?.invoice_count || 0}</p>
                 </div>
               </div>
               <div className="bg-red-200 p-[17px] rounded-lg  h-[238px]">
                 <p className="font-semibold text-xl my-2">Stock Minimum</p>
                 <div className="flex flex-col space-y-2 divide-y divide-blue-200">
-                  {produk.map((item, index) => (
+                  {dataProduk?.items?.slice(10,14)?.map((item: any, index: number) => (
                     <div key={index} className="flex justify-between ">
-                      <p className="mt-2">{item.produk}</p>
-                      <p className="mt-2">{item.jumlah} Pcs</p>
+                      <p className="mt-2">{item.name || "Produk"}</p>
+                      <p className="mt-2">{item.count || 0} Pcs</p>
                     </div>
                   ))}
                 </div>
@@ -176,10 +213,10 @@ export default function Dashboard() {
               <div className="bg-purple-200 p-[17px] h-[234px] rounded-lg w-[468px]">
                 <p className="font-semibold text-xl my-2">Top Produk</p>
                 <div className="flex flex-col space-y-2 divide-y divide-blue-200">
-                  {produk.map((item, index) => (
+                  {dataProduk?.items?.slice(0,4)?.map((item: any, index: number) => (
                     <div key={index} className="flex justify-between ">
-                      <p className="mt-2">{item.produk}</p>
-                      <p className="mt-2">{item.jumlah} Pcs</p>
+                      <p className="mt-2">{item.name || "Produk"}</p>
+                      <p className="mt-2">{item.count || 0} Pcs</p>
                     </div>
                   ))}
                 </div>
@@ -187,10 +224,10 @@ export default function Dashboard() {
               <div className="bg-red-200 p-[17px] mt-2 h-[237px] rounded-lg">
                 <p className="font-semibold text-xl mt-2 mb-3">Slow Produk</p>
                 <div className="flex flex-col space-y-2 divide-y divide-blue-200">
-                  {produk.map((item, index) => (
+                  {dataProduk?.items?.slice(5,9)?.map((item: any, index: number) => (
                     <div key={index} className="flex justify-between ">
-                      <p className="mt-2">{item.produk}</p>
-                      <p className="mt-2">{item.jumlah} Pcs</p>
+                      <p className="mt-2">{item.name || "Produk"}</p>
+                      <p className="mt-2">{item.count || 0} Pcs</p>
                     </div>
                   ))}
                 </div>

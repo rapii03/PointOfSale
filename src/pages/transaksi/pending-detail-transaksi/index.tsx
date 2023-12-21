@@ -93,7 +93,21 @@ export default function PendingDetailTransaksi() {
   );
 
   useEffect(() => {
-    mutate("/invoice/detail", router.query.id as string);
+    mutate(async () => {
+      const data = await axiosPrivate.post(
+        `/invoice/detail`,
+        {
+          id: router.query.id
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      console.log(data.data?.data);
+      return data.data?.data;
+    });
   }, [router.isReady]);
 
   const onPageChange = (page: number) => setCurrentPage(page);

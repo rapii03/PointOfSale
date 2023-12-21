@@ -203,11 +203,11 @@ export default function Transaksi() {
 
   return (
     <AdminLayout>
+      <Breadcrumbs crumbs={crumbs} />
+      <div className="flex h-fit justify-between items-center mb-6">
       <div className="absolute invisible">
         <Invoice ref={componentRef} />
       </div>
-      <Breadcrumbs crumbs={crumbs} />
-      <div className="flex h-fit justify-between items-center mb-6">
         <div className="flex  text-sm">
           <form
             onSubmit={handleSubmit(onSubmit)}

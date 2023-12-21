@@ -20,7 +20,7 @@ interface DataLaporan {
   income : number;
   to_date : string;
   discount : number;
-  products : any;
+  products : any; 
   from_date : string;
   product_count : number;
   invoice_count : number;
@@ -137,10 +137,10 @@ export default function Laporan() {
   // const endDate = moment(dateB).format("D MMMM YYYY");
 
   const produk: any = [
-    { nama: "Mie", satuan: 123, harga: "Rp.800.000" },
-    { nama: "Sabun", satuan: 145, harga: "Rp.30.000" },
-    { nama: "Rokok", satuan: 170, harga: "Rp.500.000" },
-    { nama: "Minuman", satuan: 146, harga: "Rp.400.000" },
+    // { nama: "Mie", satuan: 123, harga: "Rp.800.000" },
+    // { nama: "Sabun", satuan: 145, harga: "Rp.30.000" },
+    // { nama: "Rokok", satuan: 170, harga: "Rp.500.000" },
+    // { nama: "Minuman", satuan: 146, harga: "Rp.400.000" },
   ];
 
   const totalPenjualan: any = "3.180.000";
@@ -210,7 +210,6 @@ export default function Laporan() {
                   )}
                 />
               </div>
-              * response fromdate todate null dari be, ketika post
             </form>
           </div>
         </div>
@@ -264,18 +263,18 @@ export default function Laporan() {
                 <div className="flex justify-between text-base ">
                   <p>Total Penjualan</p>
                   {/* <p>Rp.{totalPenjualan}</p> */}
-                  <p>Rp.{data?.income}</p>
+                  <p>Rp.{data?.income || 0}</p>
                 </div>
                 <div className="flex justify-between">
                   <p>Total Discount</p>
                   {/* <p>Rp.{totalDiscount}</p> */}
-                  <p>Rp.{data?.discount}</p>
+                  <p>Rp.{data?.discount || 0}</p>
                 </div>
               </div>
               <div className="flex justify-between text-lg font-semibold">
                 <h2>Total </h2>
                 {/* <p>Rp.{totalPenjualan}</p> */}
-                <p>Rp.{data?.income as number - data?.discount as number}</p>
+                <p>Rp.{(data?.income && data?.discount) ? data?.income as number - data?.discount as number : 0}</p>
               </div>
             </div>
           </div>
@@ -288,17 +287,17 @@ export default function Laporan() {
               <div className="flex justify-between text-base ">
                 <p>Jumlah Transaksi</p>
                 {/* <p>{jumlahTransaksi}</p> */}
-                <p>{data?.invoice_count}</p>
+                <p>{data?.invoice_count || 0}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Transaksi Selesai</p>
                 {/* <p>{jumlahTransaksiSelesai}</p> */}
-                <p>{data?.invoice_success}</p>
+                <p>{data?.invoice_success || 0}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Transaksi Dibatalkan </p>
                 {/* <p>{jumlahTransaksiDibatalkan}</p> */}
-                <p>{data?.invoice_failed}</p>
+                <p>{data?.invoice_failed || 0}</p>
               </div>
             </div>
           </div>
@@ -312,20 +311,20 @@ export default function Laporan() {
               <div className="flex justify-between">
                 <p>Jumlah Invoice</p>
                 {/* <p>{jumlahInvoice}</p> */}
-                <p>{data?.invoice_count}</p>
+                <p>{data?.invoice_count || 0}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Pendapatan Invoice</p>
-                <p>Rp.{jumlahPendapatanInvoice}</p>
+                <p>Rp.{data?.income || 0}</p>
               </div>
               <div className="flex justify-between">
                 <p>Rata - Rata Jumlah Pendapatan Invoice </p>
                 {/* <p>Rp.{rataJumlahPendapatanInvoice}/Invoice</p> */}
-                <p>Rp. {data?.average_income.toFixed(2)} /Invoice</p>
+                <p>Rp. {data?.average_income ? data?.average_income?.toFixed(2) : 0} /Invoice</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Produk terjual </p>
-                <p>{jumlahProdukTerjual} Produk *Belom</p>
+                <p>{data?.product_count || 0} Produk</p>
               </div>
             </div>
           </div>
@@ -337,17 +336,17 @@ export default function Laporan() {
               </h3>
               <div className="flex  justify-between text-[#707275]">
                 <div>
-                  {produk.map((produk: any) => (
-                    <p>{produk.nama} *Belom</p>
+                  {produk?.map((produk: any) => (
+                    <p>{produk?.nama}</p>
                   ))}
                 </div>
 
                 <div className="flex flex-col">
                   <div>
-                    {produk.map((produk: any) => (
+                    {produk?.map((produk: any) => (
                       <div className="flex justify-between gap-x-56">
-                        <p>{produk.satuan} *Belom </p>
-                        <p>{produk.harga} *Belom</p>
+                        <p>{produk.satuan} </p>
+                        <p>{produk.harga}</p>
                       </div>
                     ))}
                   </div>
@@ -356,7 +355,7 @@ export default function Laporan() {
 
               <div className="flex justify-between  border-dashed border-t-2 py-2 border-[#707275] text-lg font-semibold">
                 <p>Total </p>
-                <p>Rp.{totalPenjualan} *Belom</p>
+                <p>Rp.{totalPenjualan}</p>
               </div>
             </div>
           </div>
