@@ -158,9 +158,9 @@ export default function Laporan() {
   // function print laporan
   const componentRef = useRef();
 
-  // const handlePrint = useReactToPrint({
-  //   content: () => componentRef.current,
-  // });
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   return (
     <AdminLayout>
@@ -215,7 +215,7 @@ export default function Laporan() {
         </div>
         <button
           className="w-auto h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-4 text-sm"
-          // onClick={handlePrint}
+          onClick={handlePrint}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -247,7 +247,7 @@ export default function Laporan() {
 
       <div
         className="my-2 flex flex-col h-auto items-center py-[37px] px-[55px] shadow-sm"
-        // ref={componentRef}
+        ref={componentRef}
       >
         <div className=" w-full flex flex-col gap-y-[2.313rem]">
           <div className="flex flex-col  items-center gap-[14px] py-4">

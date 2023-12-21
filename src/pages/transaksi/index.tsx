@@ -197,9 +197,9 @@ export default function Transaksi() {
   // function print
   const componentRef = useRef();
 
-  // const handlePrint = useReactToPrint({
-  //   content: () => componentRef.current,
-  // });
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   return (
     <AdminLayout>
@@ -254,8 +254,8 @@ export default function Transaksi() {
         </div>
         <button
           className="w-[9.21rem] h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-2 text-sm"
-          // onClick={handlePrint}
-          onClick={() => console.log(data)}
+          onClick={handlePrint}
+          // onClick={() => console.log(data)}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -348,7 +348,7 @@ export default function Transaksi() {
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                       <button
                         className="text-[#FF6B35] text-md"
-                        // onClick={handlePrint}
+                        onClick={handlePrint}
                       >
                         Print
                       </button>

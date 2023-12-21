@@ -3,13 +3,15 @@ import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 // import Searchbar from "@/components/Searchbar";
 import { Pagination } from "flowbite-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { SWRResponse, mutate } from "swr";
 import useSWR from "swr";
+import Invoice from "@/components/Invoice";
+import { useReactToPrint } from "react-to-print";
 // import { useForm, SubmitHandler } from "react-hook-form";
 
 // interface cashier {
@@ -100,6 +102,12 @@ export default function DetailTransaksi() {
     }
   );
 
+  const componentRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
   useEffect(() => {
     mutate(async () => {
       const data = await axiosPrivate.post(
@@ -122,6 +130,9 @@ export default function DetailTransaksi() {
   return (
     <AdminLayout>
       <div className="flex justify-between items-center mb-6">
+      <div className="absolute invisible">
+        <Invoice ref={componentRef} />
+      </div>
         <Breadcrumbs crumbs={crumbs} />
         <Link
           href="/transaksi"
@@ -151,7 +162,7 @@ export default function DetailTransaksi() {
             <p className="font-bold">Rp. {dataDetail?.sum}</p>
           </div>
         </div>
-        <button className="w-auto h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-4 text-sm mt-[3.563rem]">
+        <button onClick={handlePrint} className="w-auto h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-4 text-sm mt-[3.563rem]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="21"

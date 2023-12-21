@@ -8,6 +8,8 @@ import Link from "next/link";
 import { SWRResponse, mutate } from "swr";
 import useSWR from "swr";
 import { useRouter } from "next/router";
+import { useReactToPrint } from "react-to-print";
+import Invoice from "@/components/Invoice";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
 // import { useForm, SubmitHandler } from "react-hook-form";
@@ -122,6 +124,8 @@ export default function PendingDetailTransaksi() {
     })
     router.push("/transaksi")
   }
+
+  // function print
 
   return (
     <AdminLayout>
