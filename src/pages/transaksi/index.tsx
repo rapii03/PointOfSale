@@ -64,60 +64,14 @@ export default function Transaksi() {
     to_date: string;
   }
 
-  //Format Data Buat Transaksi
-  // let dataTransaksi: Transaksi[] = [
-  //   {
-  //     id: 1,
-  //     invoice: "#INV1214",
-  //     tanggal: "10-11-2023",
-  //     produk: "Mie",
-  //     total: 10,
-  //     status: "Sukses",
-  //   },
-
-  //   {
-  //     id: 2,
-  //     invoice: "#INV1214",
-  //     tanggal: "10-11-2023",
-  //     produk: "Mie",
-  //     total: 10,
-  //     status: "Dibatalkan",
-  //   },
-
-  //   {
-  //     id: 3,
-  //     invoice: "#INV1214",
-  //     tanggal: "10-11-2023",
-  //     produk: "Mie",
-  //     total: 10,
-  //     status: "Pending",
-  //   },
-  //   {
-  //     id: 4,
-  //     invoice: "#INV1214",
-  //     tanggal: "10-11-2023",
-  //     produk: "Mie",
-  //     total: 10,
-  //     status: "Sukses",
-  //   },
-  //   {
-  //     id: 5,
-  //     invoice: "#INV1214",
-  //     tanggal: "10-11-2023",
-  //     produk: "Mie",
-  //     total: 10,
-  //     status: "Pending",
-  //   },
-  // ];
-
   const axiosPrivate = useAxiosPrivate();
   const [accessToken, _] = useLocalStorage("accessToken", "");
   const [currentPage, setCurrentPage] = useState(1);
-  // const [search, setSearch] = useState("");
-  const [startDate, setStartDate] = useState<string | undefined>(undefined);
-  const [endDate, setEndDate] = useState<string | undefined>(undefined);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const requestData =
     startDate !== "" && endDate !== "" ? { from: startDate, to: endDate } : {};
+    
   const { data, mutate }: SWRResponse<DataTransaksi, any, boolean> = useSWR(
     `/invoice/all?page=${currentPage}`,
     (url) =>

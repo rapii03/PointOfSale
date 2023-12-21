@@ -201,7 +201,7 @@ const Notifikasi = ({ counter = undefined }: CounterProps) => {
                                   invoice null
                                 </div>
                                 <div className="nama text-[12px] font-medium">
-                                  nama kasir belom be
+                                  *nama kasir belom dari be
                                 </div>
                               </div>
                               <div className="garis w-full h-[1px] bg-[#CBD5E1] mt-2 mb-2"></div>

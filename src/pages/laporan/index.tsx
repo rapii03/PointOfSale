@@ -5,6 +5,29 @@ import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useReactToPrint } from "react-to-print";
 import moment from "moment";
+import useSWR from "swr";
+import { SWRResponse, mutate } from "swr";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import useLocalStorage from "@/hooks/useLocalStorage";
+
+
+interface Product {
+  price : number;
+  quantity : number;
+}
+
+interface DataLaporan {
+  income : number;
+  to_date : string;
+  discount : number;
+  products : any;
+  from_date : string;
+  product_count : number;
+  invoice_count : number;
+  invoice_failed : number;
+  average_income : number;
+  invoice_success : number;
+}
 
 export default function Laporan() {
   const crumbs = [
@@ -25,20 +48,72 @@ export default function Laporan() {
     setValue("endDate", value);
   };
 
-  const onSubmit = (data: any) => {
-    // Menyimpan data atau melakukan tindakan lainnya
-    const startDate = new Date(data.startDate);
-    const endDate = new Date(data.endDate);
-    console.log("Start Date :", startDate);
-    console.log("End Date :", endDate);
-  };
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const requestData =
+    startDate !== "" && endDate !== "" ? { from: startDate, to: endDate } : {};
+
+    const { data, mutate }: SWRResponse<DataLaporan, any, boolean> = useSWR(
+      `/invoice/report`,
+      (url) =>
+        axiosPrivate
+          .post(url, requestData, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          })
+          .then((res) => res.data?.data)
+    );
+    
+    const onSubmit = (data: any) => {
+      if (data.startDate && data.endDate) {
+        // Menyimpan data atau melakukan tindakan lainnya
+        const startDate = new Date(data.startDate).toISOString();
+        const endDate = new Date(data.endDate).toISOString();
+        setStartDate(startDate);
+        setEndDate(endDate);
+        mutate(async () => {
+          const data = await axiosPrivate.post(
+            `/invoice/all?page=${currentPage}`,
+            {
+              from: startDate,
+              to: endDate,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+          return data.data?.data;
+        });
+        return;
+      }
+      mutate();
+    };
 
   // Memonitor perubahan nilai input dan memicu onSubmit
   useEffect(() => {
     if (startDateValue && endDateValue) {
       handleSubmit(onSubmit)();
     }
-  }, [startDateValue, endDateValue, handleSubmit, onSubmit]);
+    if (!startDateValue) {
+      setStartDate("");
+      setEndDate("");
+    }
+    if (!endDateValue) {
+      setStartDate("");
+      setEndDate("");
+    }
+    if(!startDateValue && !endDateValue){
+      mutate();
+    }
+    console.log(data?.from_date.split("T")[0]);
+    console.log(startDateValue, endDateValue);
+  }, [startDateValue, endDateValue]);
 
   function formattedDate(data1: any, data2: any) {
     const formattedStartDate = moment(data1).format("D MMMM YYYY");
@@ -46,11 +121,14 @@ export default function Laporan() {
 
     return { formattedStartDate, formattedEndDate };
   }
+  
+  const awal = data?.from_date?.split("T")[0];
+  const akhir = data?.to_date?.split("T")[0];
 
-  const ubahTanggal = formattedDate(startDateValue, endDateValue);
+  const ubahTanggal = formattedDate(awal, akhir);
 
-  const awal = ubahTanggal.formattedStartDate;
-  const akhir = ubahTanggal.formattedEndDate;
+  const awalFormat = ubahTanggal.formattedStartDate;
+  const akhirFormat = ubahTanggal.formattedEndDate;
 
   // const dateA = new Date("25 November 2023");
   // const startDate = moment(dateA).format("D MMMM YYYY");
@@ -80,9 +158,9 @@ export default function Laporan() {
   // function print laporan
   const componentRef = useRef();
 
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-  });
+  // const handlePrint = useReactToPrint({
+  //   content: () => componentRef.current,
+  // });
 
   return (
     <AdminLayout>
@@ -132,12 +210,13 @@ export default function Laporan() {
                   )}
                 />
               </div>
+              * response fromdate todate null dari be, ketika post
             </form>
           </div>
         </div>
         <button
           className="w-auto h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-4 text-sm"
-          onClick={handlePrint}
+          // onClick={handlePrint}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -168,14 +247,15 @@ export default function Laporan() {
       </div>
 
       <div
-        className="my-2 flex flex-col h-auto items-center py-[37px] px-[55px]     shadow-sm"
-        ref={componentRef}
+        className="my-2 flex flex-col h-auto items-center py-[37px] px-[55px] shadow-sm"
+        // ref={componentRef}
       >
         <div className=" w-full flex flex-col gap-y-[2.313rem]">
           <div className="flex flex-col  items-center gap-[14px] py-4">
             <h1 className="text-2xl font-semibold">Laporan Keuangan</h1>
             <p className="text-sm">
-              Periode {awal} - {akhir}
+              Periode {awalFormat} - {akhirFormat}
+              {/* Periode {data?.from_date.split("T")[0]} - {data?.to_date.split("T")[0]} */}
             </p>
           </div>
           <div className="">
@@ -183,16 +263,19 @@ export default function Laporan() {
               <div className="border-dashed border-y-2 py-2 border-[#707275] flex flex-col gap-[14px] text-[#707275]">
                 <div className="flex justify-between text-base ">
                   <p>Total Penjualan</p>
-                  <p>Rp.{totalPenjualan}</p>
+                  {/* <p>Rp.{totalPenjualan}</p> */}
+                  <p>Rp.{data?.income}</p>
                 </div>
                 <div className="flex justify-between">
                   <p>Total Discount</p>
-                  <p>Rp.{totalDiscount}</p>
+                  {/* <p>Rp.{totalDiscount}</p> */}
+                  <p>Rp.{data?.discount}</p>
                 </div>
               </div>
               <div className="flex justify-between text-lg font-semibold">
                 <h2>Total </h2>
-                <p>Rp.{totalPenjualan}</p>
+                {/* <p>Rp.{totalPenjualan}</p> */}
+                <p>Rp.{data?.income as number - data?.discount as number}</p>
               </div>
             </div>
           </div>
@@ -204,15 +287,18 @@ export default function Laporan() {
               </h3>
               <div className="flex justify-between text-base ">
                 <p>Jumlah Transaksi</p>
-                <p>{jumlahTransaksi}</p>
+                {/* <p>{jumlahTransaksi}</p> */}
+                <p>{data?.invoice_count}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Transaksi Selesai</p>
-                <p>{jumlahTransaksiSelesai}</p>
+                {/* <p>{jumlahTransaksiSelesai}</p> */}
+                <p>{data?.invoice_success}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Transaksi Dibatalkan </p>
-                <p>{jumlahTransaksiDibatalkan}</p>
+                {/* <p>{jumlahTransaksiDibatalkan}</p> */}
+                <p>{data?.invoice_failed}</p>
               </div>
             </div>
           </div>
@@ -225,7 +311,8 @@ export default function Laporan() {
 
               <div className="flex justify-between">
                 <p>Jumlah Invoice</p>
-                <p>{jumlahInvoice}</p>
+                {/* <p>{jumlahInvoice}</p> */}
+                <p>{data?.invoice_count}</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Pendapatan Invoice</p>
@@ -233,11 +320,12 @@ export default function Laporan() {
               </div>
               <div className="flex justify-between">
                 <p>Rata - Rata Jumlah Pendapatan Invoice </p>
-                <p>Rp.{rataJumlahPendapatanInvoice}/Invoice</p>
+                {/* <p>Rp.{rataJumlahPendapatanInvoice}/Invoice</p> */}
+                <p>Rp. {data?.average_income.toFixed(2)} /Invoice</p>
               </div>
               <div className="flex justify-between">
                 <p>Jumlah Produk terjual </p>
-                <p>{jumlahProdukTerjual} Produk</p>
+                <p>{jumlahProdukTerjual} Produk *Belom</p>
               </div>
             </div>
           </div>
@@ -250,7 +338,7 @@ export default function Laporan() {
               <div className="flex  justify-between text-[#707275]">
                 <div>
                   {produk.map((produk: any) => (
-                    <p>{produk.nama}</p>
+                    <p>{produk.nama} *Belom</p>
                   ))}
                 </div>
 
@@ -258,8 +346,8 @@ export default function Laporan() {
                   <div>
                     {produk.map((produk: any) => (
                       <div className="flex justify-between gap-x-56">
-                        <p>{produk.satuan} </p>
-                        <p>{produk.harga}</p>
+                        <p>{produk.satuan} *Belom </p>
+                        <p>{produk.harga} *Belom</p>
                       </div>
                     ))}
                   </div>
@@ -268,7 +356,7 @@ export default function Laporan() {
 
               <div className="flex justify-between  border-dashed border-t-2 py-2 border-[#707275] text-lg font-semibold">
                 <p>Total </p>
-                <p>Rp.{totalPenjualan}</p>
+                <p>Rp.{totalPenjualan} *Belom</p>
               </div>
             </div>
           </div>
