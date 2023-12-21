@@ -355,7 +355,7 @@ export default function Laporan() {
 
               <div className="flex justify-between  border-dashed border-t-2 py-2 border-[#707275] text-lg font-semibold">
                 <p>Total </p>
-                <p>Rp.{totalPenjualan}</p>
+                <p>Rp.{data?.income || 0}</p>
               </div>
             </div>
           </div>
