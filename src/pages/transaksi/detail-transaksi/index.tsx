@@ -3,11 +3,46 @@ import AdminLayout from "@/components/AdminLayout";
 import Breadcrumbs from "@/components/Breadcrumbs";
 // import Searchbar from "@/components/Searchbar";
 import { Pagination } from "flowbite-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { SWRResponse, mutate } from "swr";
+import useSWR from "swr";
 // import { useForm, SubmitHandler } from "react-hook-form";
 
+// interface cashier {
+//   id: string;
+//   username: string;
+//   code: string;
+//   image: string;
+// }
+
+interface product {
+  sum: number;
+  unit: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface dataDetail {
+  id?: string;
+  create_at: string;
+  status: string;
+  code: string;
+  sum: string;
+  discount: string;
+  // cashier: cashier;
+  products: product[];
+  meta: any;
+}
+
 export default function DetailTransaksi() {
+  const router = useRouter();
+  const axiosPrivate = useAxiosPrivate();
+  const [accessToken, _] = useLocalStorage("accessToken", "");
   const paginationTheme = {
     pages: {
       base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px border border-[#FF6B35] rounded-md",
@@ -42,34 +77,42 @@ export default function DetailTransaksi() {
     satuan: string;
     total: string;
   }
-  const dataTransaksi: detailTransaksi[] = [
-    {
-      id: 1,
-      produk: "Indomie",
-      jumlah: 5,
-      harga: "Rp.87.000",
-      satuan: "Pcs",
-      total: "Rp.230.000",
-    },
-    {
-      id: 2,
-      produk: "Indomie",
-      jumlah: 5,
-      harga: "Rp.87.000",
-      satuan: "Pcs",
-      total: "Rp.230.000",
-    },
-    {
-      id: 3,
-      produk: "Indomie",
-      jumlah: 5,
-      harga: "Rp.87.000",
-      satuan: "Pcs",
-      total: "Rp.230.000",
-    },
-  ];
 
   const [currentPage, setCurrentPage] = useState(1);
+
+  const {
+    data: dataDetail,
+    error,
+    isLoading,
+  }: SWRResponse<dataDetail, any, boolean> = useSWR(
+    `/invoice/detail?page=${currentPage}`,
+    (url) => {
+      if (router.isReady) {
+        return axiosPrivate
+          .post(
+            url,
+            {
+              id: router.query.id,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          )
+          .then((res) => {
+            console.log(res.data.data);
+            return res.data.data;
+          });
+      }
+    }
+  );
+
+  useEffect(() => {
+    mutate("/invoice/detail", router.query.id as string);
+  }, [router.isReady]);
+
+
   const onPageChange = (page: number) => setCurrentPage(page);
 
   return (
@@ -98,10 +141,10 @@ export default function DetailTransaksi() {
             <p>:</p>
           </div>
           <div className="mx-4">
-            <p>#INV124</p>
-            <p>20-10-2020</p>
-            <p>sukses</p>
-            <p className="font-bold">Rp. 230.000</p>
+            <p>{dataDetail?.code}</p>
+            <p>{dataDetail?.create_at.split("T")[0]}</p>
+            <p>{dataDetail?.status}</p>
+            <p className="font-bold">Rp. {dataDetail?.sum}</p>
           </div>
         </div>
         <button className="w-auto h-10 bg-[#FF6B35] rounded-md flex items-center justify-center gap-x-2 px-4 text-sm mt-[3.563rem]">
@@ -153,7 +196,7 @@ export default function DetailTransaksi() {
             </tr>
           </thead>
           <tbody>
-            {dataTransaksi.map((col, colIndex) => (
+            {dataDetail?.products.map((col, colIndex) => (
               <tr>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
@@ -162,27 +205,27 @@ export default function DetailTransaksi() {
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.produk}
+                    {col.name}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.jumlah}
+                    {col.quantity}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center h-12 border-b">
-                    {col.harga}
+                    {col.price}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.satuan}
+                    {col.unit}
                   </div>
                 </td>
                 <td className="border-collapse px-0 text-center">
                   <div className="flex justify-start items-center   h-12 border-b">
-                    {col.total}
+                    Rp. {col.sum}
                   </div>
                 </td>
               </tr>
@@ -191,16 +234,18 @@ export default function DetailTransaksi() {
         </table>
       </div>
       <div className="flex overflow-x-auto sm:justify-end">
-        <Pagination
-          theme={paginationTheme}
-          layout="pagination"
-          currentPage={currentPage}
-          totalPages={10}
-          onPageChange={onPageChange}
-          previousLabel=""
-          nextLabel=""
-          showIcons
-        />
+        {dataDetail?.meta.totalPages > 1 && (
+          <Pagination
+            theme={paginationTheme}
+            layout="pagination"
+            currentPage={currentPage}
+            totalPages={dataDetail?.meta.totalPages}
+            onPageChange={onPageChange}
+            previousLabel=""
+            nextLabel=""
+            showIcons
+          />
+        )}
       </div>
 
       {/* Edit Modal */}

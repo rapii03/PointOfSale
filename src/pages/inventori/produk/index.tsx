@@ -135,8 +135,6 @@ export default function Product() {
     },
   };
 
-  console.log(dataProduk);
-
   return (
     <AdminLayout>
       <Breadcrumbs crumbs={crumbs} />

@@ -50,7 +50,7 @@ export default function Transaksi() {
 
   interface Transaksi {
     id?: string;
-    sum : number;
+    sum: number;
     code: string;
     create_at: string;
     product: number;
@@ -113,26 +113,72 @@ export default function Transaksi() {
   const axiosPrivate = useAxiosPrivate();
   const [accessToken, _] = useLocalStorage("accessToken", "");
   const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState("");
+  // const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState<string | undefined>(undefined);
   const [endDate, setEndDate] = useState<string | undefined>(undefined);
-
-  const { data, error, isLoading }: SWRResponse<DataTransaksi, any, boolean> =
-    useSWR(`/invoice/all?page=${currentPage}`, (url) =>
+  const requestData =
+    startDate !== "" && endDate !== "" ? { from: startDate, to: endDate } : {};
+  const { data, mutate }: SWRResponse<DataTransaksi, any, boolean> = useSWR(
+    `/invoice/all?page=${currentPage}`,
+    (url) =>
       axiosPrivate
-        .post(url, {
+        .post(url, requestData, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-          data: {
-            from : startDate,
-            to : endDate,
-          }
         })
         .then((res) => res.data?.data)
-    );
+  );
 
-  const onPageChange = (page: number) => setCurrentPage(page);
+  // const [data, setData] = useState<DataTransaksi>({
+  //   items: [],
+  //   meta: {},
+  //   from_date: "",
+  //   to_date: "",
+  // });
+
+  // const fetchWithBody = async () => {
+  //   const fetchData = await axiosPrivate.post(
+  //     `/invoice/all?page=${currentPage}`,
+  //     {
+  //       headers: {
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //       data: {
+  //         from: startDate,
+  //         to: endDate,
+  //       },
+  //     });
+  //     console.log(fetchData.data?.data);
+  // };
+
+  // const fetchWithoutBody = async (): Promise<void> => {
+  //   const fetchdata = await axiosPrivate.post(`/invoice/all?page=${currentPage}`, {
+  //     headers: {
+  //       Authorization: `Bearer ${accessToken}`,
+  //     },
+  //   });
+  //   console.log(fetchdata.data?.data);
+  //   const items = fetchdata.data?.data?.items;
+  //   setData({
+  //     items,
+  //     meta: fetchdata.data?.data?.meta,
+  //     from_date: fetchdata.data?.data?.from_date,
+  //     to_date: fetchdata.data?.data?.to_date,
+  //   });
+  // };
+
+  // useEffect(() => {
+  //   (async () => {
+  //     await fetchWithoutBody();
+  //   })();
+  // }, []);
+
+  const onPageChange = (page: number) => {
+    setCurrentPage(page);
+    mutate();
+    // fetchWithoutBody();
+  };
 
   const { control, handleSubmit, setValue, watch } = useForm();
   const minDate = watch("startDate");
@@ -148,14 +194,31 @@ export default function Transaksi() {
   };
 
   const onSubmit = (data: any) => {
-    // Menyimpan data atau melakukan tindakan lainnya
-    const startDate = new Date(data.startDate).toLocaleString('en-US',{timeZone: 'Asia/Jakarta', timeZoneName: 'short'});
-    const endDate = new Date(data.endDate).toLocaleString('en-US',{timeZone: 'Asia/Jakarta', timeZoneName: 'short'});
-    setStartDate(startDate);
-    setEndDate(endDate);
-    console.log(startDate, endDate);
-    // mutate(`/invoice/all?page=${currentPage}`);
-
+    if (data.startDate && data.endDate) {
+      // Menyimpan data atau melakukan tindakan lainnya
+      const startDate = new Date(data.startDate).toISOString();
+      const endDate = new Date(data.endDate).toISOString();
+      setStartDate(startDate);
+      setEndDate(endDate);
+      mutate(async () => {
+        const data = await axiosPrivate.post(
+          `/invoice/all?page=${currentPage}`,
+          {
+            from: startDate,
+            to: endDate,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        console.log(data.data?.data);
+        return data.data?.data;
+      });
+      return;
+    }
+    mutate();
   };
 
   // Memonitor perubahan nilai input dan memicu onSubmit
@@ -163,16 +226,19 @@ export default function Transaksi() {
     if (startDateValue && endDateValue) {
       handleSubmit(onSubmit)();
     }
-    if(!startDateValue){
-      setStartDate(undefined);
-      setEndDate(undefined);
+    if (!startDateValue) {
+      setStartDate("");
+      setEndDate("");
     }
-    if(!endDateValue){
-      setStartDate(undefined);
-      setEndDate(undefined);
+    if (!endDateValue) {
+      setStartDate("");
+      setEndDate("");
+    }
+    if(!startDateValue && !endDateValue){
+      mutate();
     }
     console.log(startDate, endDate);
-  }, [startDateValue, endDateValue, handleSubmit, onSubmit]);
+  }, [startDateValue, endDateValue]);
 
   // function print
   const componentRef = useRef();
@@ -210,9 +276,7 @@ export default function Transaksi() {
                 )}
               />
             </div>
-
             <p>to</p>
-
             <div>
               <Controller
                 name="endDate"
@@ -231,6 +295,7 @@ export default function Transaksi() {
                 )}
               />
             </div>
+            {/* <button type="submit">Submit</button> */}
           </form>
         </div>
         <button
@@ -286,7 +351,7 @@ export default function Transaksi() {
             </tr>
           </thead>
           <tbody>
-            {data?.items.map((item, index) => (
+            {data?.items?.map((item, index) => (
               <tr>
                 <td className="border-collapse  px-0 text-center">
                   <div className="flex justify-center items-center   h-12 border-b">
@@ -314,17 +379,15 @@ export default function Transaksi() {
                   </div>
                 </td>
                 <td className="border-collapse p2 px-0 text-center">
-                  <div
-                    className={
-                      item.status === "success"
-                        ? "flex justify-start items-center h-12 border-b text-[#10B981]"
-                        : item.status === "Dibatalkan"
-                        ? "flex justify-start items-center h-12 border-b text-[#FB1919]"
-                        : "flex justify-start items-center h-12 border-b "
-                    }
-                  >
-                    {item.status}
-                  </div>
+                  {item.status === "success" && (
+                    <p className="flex justify-start items-center h-12 border-b text-[#10B981]">Sukses</p>
+                  )}
+                  {item.status === "deleted" && (
+                    <p className="flex justify-start items-center h-12 border-b text-[#FB1919]">Dibatalkan</p>
+                  )}
+                  {item.status !== "success" && item.status !== "deleted" && (
+                    <p className="flex justify-start items-center h-12 border-b ">Pending</p>
+                  )}
                 </td>
                 {item.status != "pending" && (
                   <td className="border-collapse p2 px-0 text-center">
@@ -336,7 +399,10 @@ export default function Transaksi() {
                         Print
                       </button>
                       <Link
-                        href={`/transaksi/detail-transaksi-${item.id}`}
+                        href={{
+                          pathname: "/transaksi/detail-transaksi",
+                          query: { id: item.id },
+                        }}
                         className="text-blue-700 text-md"
                       >
                         Detail
@@ -348,7 +414,11 @@ export default function Transaksi() {
                   <td className="border-collapse p2 px-0 text-center">
                     <div className="flex justify-center items-center gap-x-5 h-12 border-b">
                       <Link
-                        href={`/transaksi/pending-detail-transaksi-${item.id}`}
+                        // href={`/transaksi/pending-detail-transaksi`}
+                        href={{
+                          pathname: "/transaksi/pending-detail-transaksi",
+                          query: { id: item.id },
+                        }}
                         className="text-blue-700 text-md"
                       >
                         Detail
@@ -375,12 +445,6 @@ export default function Transaksi() {
           />
         )}
       </div>
-
-      {/* Edit Modal */}
-
-      {/* Add Modal */}
-
-      {/* Delete Modal */}
     </AdminLayout>
   );
 }

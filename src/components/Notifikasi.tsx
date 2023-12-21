@@ -5,6 +5,7 @@ import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { SWRResponse } from "swr";
 import useSWR from "swr";
+import Link from "next/link";
 
 export interface CounterProps {
   counter?: number | undefined;
@@ -13,24 +14,8 @@ export interface CounterProps {
 export interface Cancel {
   id: number;
   invoice: string;
-  nameCashier: string;
-  desk: string;
+  message: string;
 }
-
-const cancels: Cancel[] = [
-  {
-    id: 1,
-    invoice: "#INV123",
-    nameCashier: "Amel Putri",
-    desk: "Barang yang diinputkan ada yang tidak sesuai dengan konsuumen an ada yang tidak sesuai dengan konsuumen",
-  },
-  {
-    id: 2,
-    invoice: "#INV431",
-    nameCashier: "Putri",
-    desk: "Barang yang diinputkan ada yang tidak sesuai dengan konsuumen an ada yang tidak sesuai dengan konsuumen",
-  },
-];
 
 export interface Expired {
   id: string;
@@ -55,6 +40,20 @@ let expireds: Expired[] = [
 ];
 
 const Notifikasi = ({ counter = undefined }: CounterProps) => {
+  // const cancels: Cancel[] = [
+  //   {
+  //     id: 1,
+  //     invoice: "#INV123",
+  //     nameCashier: "Amel Putri",
+  //     desk: "Barang yang diinputkan ada yang tidak sesuai dengan konsuumen an ada yang tidak sesuai dengan konsuumen",
+  //   },
+  //   {
+  //     id: 2,
+  //     invoice: "#INV431",
+  //     nameCashier: "Putri",
+  //     desk: "Barang yang diinputkan ada yang tidak sesuai dengan konsuumen an ada yang tidak sesuai dengan konsuumen",
+  //   },
+  // ];
   const [activeTab, setActiveTab] = useState("notifikasi");
   const [isModalVisible, setModalVisible] = useState(false);
 
@@ -77,11 +76,7 @@ const Notifikasi = ({ counter = undefined }: CounterProps) => {
   //       .then((res) => res.data?.data)
   // );
 
-  const {
-    data,
-    error,
-    isLoading,
-  }: SWRResponse<any, any, boolean> = useSWR(
+  const { data, error, isLoading }: SWRResponse<any, any, boolean> = useSWR(
     `/notification/product-expired-date`,
     (url) =>
       axiosPrivate
@@ -101,11 +96,25 @@ const Notifikasi = ({ counter = undefined }: CounterProps) => {
               id: item.product.id,
               nameProduct: item.product.name,
               date: `${day} - ${month} - ${year}`,
-              desk: `Produk ini memiliki tersisa tenggat waktu kadaluarsa selama ${parseInt(day) - dateNow.getDate()} hari lagi.`,
+              desk: `Produk ini memiliki tersisa tenggat waktu kadaluarsa selama ${
+                parseInt(day) - dateNow.getDate()
+              } hari lagi.`,
             };
           });
           // return res.data?.data
         })
+  );
+
+  const { data: dataCancel }: SWRResponse<Cancel[], any, boolean> = useSWR(
+    `notification/invoice-delete-request`,
+    (url) =>
+      axiosPrivate
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((res) => res.data?.data)
   );
 
   const handleTabClick = (
@@ -180,36 +189,45 @@ const Notifikasi = ({ counter = undefined }: CounterProps) => {
                   <div className="mt-[14px] h-[386px] overflow-y-auto mr-1">
                     {activeTab === "notifikasi" ? (
                       <div className=" notif flex flex-col gap-3">
-                        {cancels.map((cancel) => (
+                        {dataCancel?.map((item) => (
                           <div
-                            key={cancel.id}
+                            key={item?.id}
                             className="card py-[6px] px-[11px] rounded-[5px] border-[1px] border-[#FF6B35] bg-white"
                           >
                             <div className="head">
                               <div className="flex justify-between items-center">
                                 <div className="inv text-[14px] font-bold text-[#FF6B35]">
-                                  {cancel.invoice}
+                                  {/* {item?.invoice} */}
+                                  invoice null
                                 </div>
                                 <div className="nama text-[12px] font-medium">
-                                  {cancel.nameCashier}
+                                  nama kasir belom be
                                 </div>
                               </div>
                               <div className="garis w-full h-[1px] bg-[#CBD5E1] mt-2 mb-2"></div>
                             </div>
                             <div className="konten">
                               <div className="desk text-[12px] ">
-                                {cancel.desk}
+                                {item?.message}
                               </div>
                               <div className="btn flex justify-end mt-2">
-                                <button
+                                {/* <button
                                   className="bg-[#FF6B35] text-white px-2 py-1 rounded text-[12px]"
-                                //   onClick={(event) => {
-                                //     event.stopPropagation();
-                                //     // Tambahkan logika untuk menangani klik tombol "Detail" di sini
-                                //   }}
+                                  //   onClick={(event) => {
+                                  //     event.stopPropagation();
+                                  //     // Tambahkan logika untuk menangani klik tombol "Detail" di sini
+                                  //   }}
                                 >
                                   Detail
-                                </button>
+                                </button> */}
+                                <Link
+                                  href={{
+                                    pathname: "/transaksi/detail-transaksi",
+                                    query: { id: item.id },
+                                  }}
+                                  className="bg-[#FF6B35] text-white px-2 py-1 rounded text-[12px]"
+                                >Detail
+                                </Link>
                               </div>
                             </div>
                           </div>
