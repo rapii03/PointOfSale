@@ -138,7 +138,7 @@ export default function PendingDetailTransaksi() {
           Kembali
         </Link>
       </div>
-      <div className="flex h-fit justify-between items-center mb-6 ">
+      <div className="flex h-fit justify-between items-center mb-6 ">fin
         <div className="flex">
           <div className=" mr-14">
             <p>Invoice</p>
