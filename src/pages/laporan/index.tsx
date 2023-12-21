@@ -122,8 +122,8 @@ export default function Laporan() {
     return { formattedStartDate, formattedEndDate };
   }
   
-  const awal = data?.from_date?.split("T")[0];
-  const akhir = data?.to_date?.split("T")[0];
+  const awal = data?.from_date? data?.from_date?.split("T")[0] : startDateValue? new Date(startDateValue).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+  const akhir = data?.to_date? data?.to_date?.split("T")[0] : endDateValue? new Date(endDateValue).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
 
   const ubahTanggal = formattedDate(awal, akhir);
 
